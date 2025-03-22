@@ -111,6 +111,41 @@ for idx, row in vessel_data.iterrows():
                     vessel_data.at[idx, "CII_Rating"] = st.selectbox("CII Rating", options=["A", "B", "C", "D", "E"], index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]), key=f"cii_{idx}")
                     vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (%)", value=row["FuelEU_GHG_Compliance"], key=f"ghg_{idx}")
 
+# Deployment Simulation Section
+st.header("Deployment Simulation Results")
+
+spot_decisions = []
+breakevens = []
+total_co2_emissions = []
+for index, vessel in vessel_data.iterrows():
+    ref_total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
+    adjusted_fuel = ref_total_fuel * (assumed_speed / assumed_speed) ** 3
+    if carbon_calc_method == "Boil Off Rate":
+        adjusted_fuel = vessel["Boil_Off_Rate_percent"] * vessel["Capacity_CBM"] / 1000
+
+    auto_co2 = adjusted_fuel * 3.114
+    carbon_cost = auto_co2 * ets_price
+    fuel_cost = adjusted_fuel * lng_bunker_price
+    margin_cost = vessel["Margin"]
+    breakeven = fuel_cost + carbon_cost + margin_cost
+
+    breakevens.append({
+        "Vessel_ID": vessel["Vessel_ID"],
+        "Vessel": vessel["Name"],
+        "Fuel Cost ($/day)": f"{fuel_cost:,.1f}",
+        "Carbon Cost ($/day)": f"{carbon_cost:,.1f}",
+        "Margin ($/day)": f"{margin_cost:,.1f}",
+        "Breakeven Spot ($/day)": f"{breakeven:,.1f}"
+    })
+
+    total_co2_emissions.append(f"{auto_co2:,.1f}")
+    spot_decisions.append("✅ Spot Recommended" if base_spot_rate > breakeven else "❌ TC/Idle Preferred")
+
+results_df = pd.DataFrame(breakevens)
+results_df["Total CO₂ (t/day)"] = total_co2_emissions
+results_df["Decision"] = spot_decisions
+st.dataframe(results_df)
+
 # Voyage Simulation Section
 st.header("Voyage Simulation Advisor")
 voyage_days = st.number_input("Voyage Duration (days)", min_value=1, value=30)
@@ -135,9 +170,9 @@ for index, vessel in vessel_data.iterrows():
 
     voyage_results.append({
         "Vessel": vessel["Name"],
-        "Voyage Cost ($)": total_voyage_cost,
-        "Freight Revenue ($)": total_freight,
-        "Voyage Profit ($)": voyage_profit
+        "Voyage Cost ($)": round(total_voyage_cost, 1),
+        "Freight Revenue ($)": round(total_freight, 1),
+        "Voyage Profit ($)": round(voyage_profit, 1)
     })
 
 voyage_df = pd.DataFrame(voyage_results)
@@ -150,49 +185,3 @@ st.dataframe(
 )
 
 st.success(f"🚢 Recommended Vessel for this Voyage: {best_vessel}")
-
-# ----------------------- Simulation Section -----------------------
-st.header("Deployment Simulation Results")
-with st.spinner("Calculating breakevens based on realistic speed curves..."):
-    spot_decisions = []
-    breakevens = []
-    total_co2_emissions = []
-    base_speed = assumed_speed
-
-    for index, vessel in vessel_data.iterrows():
-        ref_total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
-        adjusted_fuel = ref_total_fuel * (assumed_speed / base_speed) ** 3
-        if carbon_calc_method == "Boil Off Rate":
-            adjusted_fuel = vessel["Boil_Off_Rate_percent"] * vessel["Capacity_CBM"] / 1000
-
-        auto_co2 = adjusted_fuel * 3.114
-        carbon_cost = auto_co2 * ets_price
-        fuel_cost = adjusted_fuel * lng_bunker_price
-        margin_cost = vessel["Margin"]
-        breakeven = fuel_cost + carbon_cost + margin_cost
-
-        breakevens.append({
-            "Vessel_ID": vessel["Vessel_ID"],
-            "Vessel": vessel["Name"],
-            "Fuel Cost ($/day)": f"{fuel_cost:,.1f}",
-            "Carbon Cost ($/day)": f"{carbon_cost:,.1f}",
-            "Margin ($/day)": f"{margin_cost:,.1f}",
-            "Breakeven Spot ($/day)": f"{breakeven:,.1f}"
-        })
-
-        total_co2_emissions.append(f"{auto_co2:,.1f}")
-
-        if base_spot_rate > breakeven:
-            spot_decisions.append("✅ Spot Recommended")
-        else:
-            spot_decisions.append("❌ TC/Idle Preferred")
-
-    results_df = pd.DataFrame(breakevens)
-    results_df["Total CO₂ (t/day)"] = total_co2_emissions
-    results_df["Decision"] = spot_decisions
-
-    st.dataframe(
-        results_df.style.set_properties(**{'text-align': 'center'}).set_table_styles([
-            {'selector': 'th', 'props': [('text-align', 'center')]}
-        ])
-    )
