@@ -40,8 +40,8 @@ else:
 st.sidebar.markdown(f"**Market Tightness (0-1):** {market_tightness:.2f}")
 
 # Spot and TC rate suggestion
-base_spot_rate = st.sidebar.slider("Current Spot Rate (USD/day)", 40000, 150000, 60000, step=1000)
-base_tc_rate = st.sidebar.slider("Current TC Rate (USD/day)", 30000, 140000, 50000, step=1000)
+base_spot_rate = st.sidebar.slider("Current Spot Rate (USD/day)", 5000, 150000, 60000, step=1000)
+base_tc_rate = st.sidebar.slider("Current TC Rate (USD/day)", 5000, 140000, 50000, step=1000)
 
 # ----------------------- MAIN PANEL -----------------------
 st.title("LNG Fleet Deployment Simulator")
