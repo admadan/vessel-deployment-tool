@@ -116,7 +116,10 @@ results_df = results_df[["Vessel_ID", "Vessel", "Main_Engine_Consumption_MT_per_
 results_df["Decision"] = spot_decisions
 
 
-st.dataframe(results_df.style.set_properties(**{'text-align': 'center'}).set_table_styles([{
+st.dataframe(results_df.style.set_properties(**{'text-align': 'center', 'width': '100px'}).set_table_styles([{
+    'selector': 'th',
+    'props': [('text-align', 'center')]
+}])).set_table_styles([{
     'selector': 'th',
     'props': [('text-align', 'center')]
 }]))
