@@ -138,22 +138,31 @@ with st.sidebar.expander("💾 Save/Load Scenario"):
         st.experimental_rerun()
 
 
+
 # ----------------------- Simulation Section -----------------------
 st.header("Deployment Simulation Results")
-with st.spinner("Calculating breakevens and recommendations..."):
+with st.spinner("Calculating breakevens based on realistic speed curves..."):
     spot_decisions = []
     breakevens = []
     total_co2_emissions = []
 
-    for index, vessel in vessel_data.iterrows():
-        if carbon_calc_method == "Main Engine Consumption":
-            total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
-        else:
-            total_fuel = vessel["Boil_Off_Rate_percent"] * vessel["Capacity_CBM"] / 1000  # BOR based logic
+    base_speed = 15  # reference speed where consumption is calibrated
 
-        auto_co2 = total_fuel * 3.114
+    for index, vessel in vessel_data.iterrows():
+        # Reference total consumption at base speed (15 knots)
+        ref_total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
+
+        # Apply cubic relationship based on assumed speed
+        adjusted_fuel = ref_total_fuel * (assumed_speed / base_speed) ** 3
+
+        # If carbon calc method is Boil-Off based, switch logic
+        if carbon_calc_method == "Boil Off Rate":
+            adjusted_fuel = vessel["Boil_Off_Rate_percent"] * vessel["Capacity_CBM"] / 1000
+
+        # Calculate carbon & fuel cost
+        auto_co2 = adjusted_fuel * 3.114
         carbon_cost = auto_co2 * ets_price
-        fuel_cost = total_fuel * lng_bunker_price
+        fuel_cost = adjusted_fuel * lng_bunker_price
         margin_cost = vessel["Margin"]
         breakeven = fuel_cost + carbon_cost + margin_cost
 
