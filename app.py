@@ -101,4 +101,8 @@ for idx, row in vessel_data.iterrows():
                 base_speed = assumed_speed
                 ref_total_consumption = row["Main_Engine_Consumption_MT_per_day"] + row["Generator_Consumption_MT_per_day"]
                 total_consumption = [ref_total_consumption * (speed / base_speed) ** 3 for speed in speed_range]
-                st.line_chart({"Speed (knots)": speed_range, "Total Consumption (tons/day)": total_consumption})
+                df_curve = pd.DataFrame({
+    "Speed (knots)": speed_range,
+    "Total Consumption (tons/day)": total_consumption
+}).set_index("Speed (knots)")
+st.line_chart(df_curve)
