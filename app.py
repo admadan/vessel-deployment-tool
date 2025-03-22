@@ -105,7 +105,7 @@ for index, vessel in vessel_data.iterrows():
 
 results_df = pd.DataFrame(breakevens)
 results_df["Total CO₂ (t/day)"] = total_co2_emissions
-results_df = results_df[["Vessel_ID", "Vessel", "Total CO₂ (t/day)", "Fuel Cost", "Carbon Cost", "Margin", "Breakeven Spot (USD/day)"]]
+results_df = results_df[["Vessel_ID", "Vessel", "Main_Engine_Consumption_MT_per_day", "Generator_Consumption_MT_per_day", "Total CO₂ (t/day)", "Fuel Cost", "Carbon Cost", "Margin", "Breakeven Spot (USD/day)"]]
 results_df["Decision"] = spot_decisions
 results_df["Total CO₂ (t/day)"] = total_co2_emissions
 
