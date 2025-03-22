@@ -21,28 +21,7 @@ assumed_speed = st.sidebar.number_input("Speed (knots)", value=11.0, step=0.1)
 sea_margin = st.sidebar.number_input("Sea Margin (%)", value=0.05, step=0.01)
 assumed_laden_days = st.sidebar.number_input("Laden Days Fraction", value=0.4, step=0.01)
 demand_billion_ton_mile = st.sidebar.number_input("Demand (Bn Ton Mile)", value=10396.0, step=10.0)
-auto_tightness = st.sidebar.checkbox("Auto-calculate market tightness", value=True)
-
-# Tightness calculation
-dwt_utilization = (fleet_size_dwt_supply_in_dwt_million * 1_000_000 / fleet_size_number_supply) * utilization_constant
-distance_travelled_per_day = assumed_speed * 24 * (1 - sea_margin)
-productive_laden_days_per_year = assumed_laden_days * 365
-maximum_supply_billion_ton_mile = fleet_size_number_supply * dwt_utilization * distance_travelled_per_day * productive_laden_days_per_year / 1_000_000_000
-equilibrium = demand_billion_ton_mile - maximum_supply_billion_ton_mile
-
-st.sidebar.markdown(f"**DWT Utilization:** {dwt_utilization:,.1f} MT")
-st.sidebar.markdown(f"**Max Supply:** {maximum_supply_billion_ton_mile:,.1f} Bn Ton Mile")
-st.sidebar.markdown(f"**Equilibrium:** {equilibrium:,.1f} Bn Ton Mile")
-st.sidebar.markdown(f"**Market Condition:** {'Excess Supply' if equilibrium < 0 else 'Excess Demand'}")
-auto_tightness = st.sidebar.checkbox("Auto-calculate market tightness", value=True)
-
-fleet_size_number_supply = st.sidebar.number_input("Fleet Size (# of Ships)", value=3131, step=1, format="%d")
-fleet_size_dwt_supply_in_dwt_million = st.sidebar.number_input("Supply (M DWT)", value=254.1, step=0.1)
-utilization_constant = st.sidebar.number_input("Utilization Factor", value=0.95, step=0.01)
-assumed_speed = st.sidebar.number_input("Speed (knots)", value=11.0, step=0.1)
-sea_margin = st.sidebar.number_input("Sea Margin (%)", value=0.05, step=0.01)
-assumed_laden_days = st.sidebar.number_input("Laden Days Fraction", value=0.4, step=0.01)
-demand_billion_ton_mile = st.sidebar.number_input("Demand (Bn Ton Mile)", value=10396.0, step=10.0)
+# Removed duplicate inputs block
 
 # Tightness calculation
 dwt_utilization = (fleet_size_dwt_supply_in_dwt_million * 1_000_000 / fleet_size_number_supply) * utilization_constant
@@ -56,7 +35,14 @@ if auto_tightness:
 else:
     market_tightness = st.sidebar.slider("Manual Tightness (0-1)", 0.0, 1.0, 0.5)
 
-st.sidebar.markdown(f"**Tightness:** {market_tightness:.2f}")
+with st.sidebar.expander("🔍 Market Calculations"):
+    st.markdown(f"**DWT Utilization:** {dwt_utilization:,.1f} MT")
+    st.markdown(f"**Max Supply:** {maximum_supply_billion_ton_mile:,.1f} Bn Ton Mile")
+    st.markdown(f"**Equilibrium:** {equilibrium:,.1f} Bn Ton Mile")
+    market_status = 'Excess Supply' if equilibrium < 0 else 'Excess Demand'
+status_color = 'red' if market_status == 'Excess Supply' else 'green'
+st.markdown(f"**Market Condition:** <span style='color:{status_color}'>{market_status}</span>", unsafe_allow_html=True)
+    st.markdown(f"**Tightness:** {market_tightness:.2f}")
 
 base_spot_rate = st.sidebar.slider("Spot Rate (USD/day)", 5000, 150000, 60000, step=1000)
 base_tc_rate = st.sidebar.slider("TC Rate (USD/day)", 5000, 140000, 50000, step=1000)
