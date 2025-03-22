@@ -77,10 +77,10 @@ for idx, row in vessel_data.iterrows():
 with st.spinner("Applying changes..."):
 
     spot_decisions = []
-breakevens = []
-total_co2_emissions = []
+    breakevens = []
+    total_co2_emissions = []
 
-for index, vessel in vessel_data.iterrows():
+    for index, vessel in vessel_data.iterrows():
     total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
     auto_co2 = total_fuel * 3.114
     carbon_cost = auto_co2 * ets_price
@@ -106,7 +106,7 @@ for index, vessel in vessel_data.iterrows():
     else:
         spot_decisions.append("❌ TC/Idle Preferred")
 
-        results_df = pd.DataFrame(breakevens)
+            results_df = pd.DataFrame(breakevens)
 results_df["Total CO₂ (t/day)"] = np.round(total_co2_emissions, 1)
 results_df["Fuel Cost"] = results_df["Fuel Cost"].apply(lambda x: f"{x:,.1f}")
 results_df["Carbon Cost"] = results_df["Carbon Cost"].apply(lambda x: f"{x:,.1f}")
@@ -117,7 +117,7 @@ results_df = results_df[["Vessel_ID", "Vessel", "Main_Engine_Consumption_MT_per_
 results_df["Decision"] = spot_decisions
 
 
-    st.dataframe(
+        st.dataframe(
     results_df.style.set_properties(**{'text-align': 'center', 'width': '100px'}).set_table_styles([
         {'selector': 'th', 'props': [('text-align', 'center')]}
     ])
