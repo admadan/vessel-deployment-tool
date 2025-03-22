@@ -100,24 +100,22 @@ for idx, row in vessel_data.iterrows():
                 compare_toggle = st.checkbox("Compare with another vessel", key=f"compare_toggle_{idx}")
 
                 if compare_toggle:
-                compare_vessel = st.selectbox("Select vessel to compare", [v for i, v in enumerate(vessel_data['Name']) if i != idx], key=f"compare_{idx}") if i != idx], key=f"compare_{idx}")
-                min_speed = max(8, assumed_speed - 3)
-                max_speed = min(20, assumed_speed + 3)
-                speed_range = list(range(int(min_speed), int(max_speed) + 1))
-                base_speed = assumed_speed
-                ref_total_consumption = row["Main_Engine_Consumption_MT_per_day"] + row["Generator_Consumption_MT_per_day"]
-                total_consumption = [ref_total_consumption * (speed / base_speed) ** 3 for speed in speed_range]
-                df_curve = pd.DataFrame({
-                    "Speed (knots)": speed_range,
-                    "Total Consumption (tons/day)": total_consumption
-                }).set_index("Speed (knots)")
-                                # Get the comparison vessel row
-                compare_row = vessel_data[vessel_data['Name'] == compare_vessel].iloc[0]
-                compare_ref_consumption = compare_row["Main_Engine_Consumption_MT_per_day"] + compare_row["Generator_Consumption_MT_per_day"]
-                compare_total_consumption = [compare_ref_consumption * (speed / base_speed) ** 3 for speed in speed_range]
-
-                df_curve[compare_vessel] = compare_total_consumption
-                df_curve.rename(columns={"Total Consumption (tons/day)": row["Name"]}, inplace=True)
+                    compare_vessel = st.selectbox("Select vessel to compare", [v for i, v in enumerate(vessel_data['Name']) if i != idx], key=f"compare_{idx}")
+                    min_speed = max(8, assumed_speed - 3)
+                    max_speed = min(20, assumed_speed + 3)
+                    speed_range = list(range(int(min_speed), int(max_speed) + 1))
+                    base_speed = assumed_speed
+                    ref_total_consumption = row["Main_Engine_Consumption_MT_per_day"] + row["Generator_Consumption_MT_per_day"]
+                    total_consumption = [ref_total_consumption * (speed / base_speed) ** 3 for speed in speed_range]
+                    df_curve = pd.DataFrame({
+                        "Speed (knots)": speed_range,
+                        "Total Consumption (tons/day)": total_consumption
+                    }).set_index("Speed (knots)")
+                    compare_row = vessel_data[vessel_data['Name'] == compare_vessel].iloc[0]
+                    compare_ref_consumption = compare_row["Main_Engine_Consumption_MT_per_day"] + compare_row["Generator_Consumption_MT_per_day"]
+                    compare_total_consumption = [compare_ref_consumption * (speed / base_speed) ** 3 for speed in speed_range]
+                    df_curve[compare_vessel] = compare_total_consumption
+                    df_curve.rename(columns={"Total Consumption (tons/day)": row["Name"]}, inplace=True)": row["Name"]}, inplace=True)
                 st.line_chart(df_curve)
 
 # ----------------------- Simulation Section -----------------------
