@@ -60,7 +60,13 @@ base_tc_rate = st.sidebar.number_input("Current TC Rate (USD/day)", value=50000)
 
 # ----------------------- MAIN PANEL -----------------------
 st.title("LNG Fleet Deployment Simulator")
-st.dataframe(vessel_data)
+st.dataframe(vessel_data.style.set_table_styles([{
+    'selector': 'th',
+    'props': [('text-align', 'center')]
+}, {
+    'selector': 'td',
+    'props': [('text-align', 'center')]
+}]))
 
 st.header("2️⃣ Simulation Results")
 
@@ -86,7 +92,13 @@ results = pd.DataFrame({
     "Decision": spot_decisions
 })
 
-st.dataframe(results)
+st.dataframe(results.style.set_table_styles([{
+    'selector': 'th',
+    'props': [('text-align', 'center')]
+}, {
+    'selector': 'td',
+    'props': [('text-align', 'center')]
+}]))
 
 # ----------------------- MARKET BALANCE FEEDBACK -----------------------
 st.subheader("🌍 Market Equilibrium Result")
