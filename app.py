@@ -35,9 +35,9 @@ else:
     market_tightness = st.sidebar.slider("Manual Tightness (0-1)", 0.0, 1.0, 0.5)
 
 with st.sidebar.expander("🔍 Market Calculations"):
-    st.markdown(f"**DWT Utilization:** {dwt_utilization:,.1f} MT")
-    st.markdown(f"**Max Supply:** {maximum_supply_billion_ton_mile:,.1f} Bn Ton Mile")
-    st.markdown(f"**Equilibrium:** {equilibrium:,.1f} Bn Ton Mile")
+    st.markdown(f"**DWT Utilization:** {dwt_utilization:,.1f} MT", help="DWT Utilization = (Fleet DWT / Fleet Size) * Utilization Factor")
+    st.markdown(f"**Max Supply:** {maximum_supply_billion_ton_mile:,.1f} Bn Ton Mile", help="Max Supply = Fleet * DWT Utilization * Speed * Laden Days")
+    st.markdown(f"**Equilibrium:** {equilibrium:,.1f} Bn Ton Mile", help="Equilibrium = Demand - Max Supply")
     market_status = 'Excess Supply' if equilibrium < 0 else 'Excess Demand'
     status_color = 'red' if market_status == 'Excess Supply' else 'green'
     st.markdown(f"**Market Condition:** <span style='color:{status_color}'>{market_status}</span>", unsafe_allow_html=True)
