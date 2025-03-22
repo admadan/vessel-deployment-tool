@@ -81,14 +81,14 @@ with st.spinner("Applying changes..."):
     total_co2_emissions = []
 
     for index, vessel in vessel_data.iterrows():
-    total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
+        total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
     auto_co2 = total_fuel * 3.114
     carbon_cost = auto_co2 * ets_price
     fuel_cost = total_fuel * lng_bunker_price
     margin_cost = vessel["Margin"]
     breakeven = fuel_cost + carbon_cost + margin_cost
 
-    breakevens.append({
+        breakevens.append({
         "Vessel_ID": vessel["Vessel_ID"],
         "Vessel": vessel["Name"],
         "Main_Engine_Consumption_MT_per_day": vessel["Main_Engine_Consumption_MT_per_day"],
@@ -99,14 +99,14 @@ with st.spinner("Applying changes..."):
         "Breakeven Spot (USD/day)": breakeven
     })
 
-    total_co2_emissions.append(auto_co2)
+        total_co2_emissions.append(auto_co2)
 
-    if base_spot_rate > breakeven:
+        if base_spot_rate > breakeven:
         spot_decisions.append("✅ Spot Recommended")
-    else:
+        else:
         spot_decisions.append("❌ TC/Idle Preferred")
 
-            results_df = pd.DataFrame(breakevens)
+                results_df = pd.DataFrame(breakevens)
 results_df["Total CO₂ (t/day)"] = np.round(total_co2_emissions, 1)
 results_df["Fuel Cost"] = results_df["Fuel Cost"].apply(lambda x: f"{x:,.1f}")
 results_df["Carbon Cost"] = results_df["Carbon Cost"].apply(lambda x: f"{x:,.1f}")
@@ -117,7 +117,7 @@ results_df = results_df[["Vessel_ID", "Vessel", "Main_Engine_Consumption_MT_per_
 results_df["Decision"] = spot_decisions
 
 
-        st.dataframe(
+            st.dataframe(
     results_df.style.set_properties(**{'text-align': 'center', 'width': '100px'}).set_table_styles([
         {'selector': 'th', 'props': [('text-align', 'center')]}
     ])
