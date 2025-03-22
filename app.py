@@ -85,6 +85,7 @@ for idx, row in vessel_data.iterrows():
         vessel_data.at[idx, "Length_m"] = st.number_input("Length (m)", value=row["Length_m"], key=f"len_{idx}")
         vessel_data.at[idx, "Beam_m"] = st.number_input("Beam (m)", value=row["Beam_m"], key=f"beam_{idx}")
         vessel_data.at[idx, "Draft_m"] = st.number_input("Draft (m)", value=row["Draft_m"], key=f"draft_{idx}")
+        vessel_data.at[idx, "Capacity_CBM"] = st.number_input("Capacity (CBM)", value=row["Capacity_CBM"], key=f"cap_{idx}")
 
         vessel_data.at[idx, "Main_Engine_Consumption_MT_per_day"] = st.number_input("Main Engine (tons/day)", value=row["Main_Engine_Consumption_MT_per_day"], key=f"me_{idx}")
         vessel_data.at[idx, "Generator_Consumption_MT_per_day"] = st.number_input("Generator (tons/day)", value=row["Generator_Consumption_MT_per_day"], key=f"gen_{idx}")
@@ -102,19 +103,10 @@ for idx, row in vessel_data.iterrows():
                 st.caption("Speed & Consumption Curve")
                 sc_speeds = [13, 14, 15, 16, 17, 18]
                 total_consumption = [
-                    row["Main_Engine_Consumption_MT_per_day"] + row["Generator_Consumption_MT_per_day"] * (speed / 17)  # simple scale example
-                    for speed in sc_speeds
+                    row["Main_Engine_Consumption_MT_per_day"] + row["Generator_Consumption_MT_per_day"] * (speed / 17) for speed in sc_speeds
                 ]
-                import matplotlib.pyplot as plt
-fig, ax = plt.subplots()
-ax.plot(sc_speeds, total_consumption, marker='o', linestyle='-')
-ax.set_xlim(0, 25)
-ax.set_ylim(0, 150)
-ax.set_xlabel('Speed (knots)')
-ax.set_ylabel('Total Consumption (tons/day)')
-ax.set_title('Speed & Consumption Curve')
-ax.grid(True)
-st.pyplot(fig)
+                fig = plot_sc_curve(sc_speeds, total_consumption)
+                st.pyplot(fig)
 
 # Scenario Save/Load
 with st.sidebar.expander("💾 Save/Load Scenario"):
@@ -124,47 +116,3 @@ with st.sidebar.expander("💾 Save/Load Scenario"):
     if uploaded_file is not None:
         uploaded_data = json.load(uploaded_file)
         st.write("Scenario loaded successfully!")
-
-# ----------------------- Simulation Section -----------------------
-with st.spinner("Applying changes..."):
-    spot_decisions = []
-    breakevens = []
-    total_co2_emissions = []
-
-    for index, vessel in vessel_data.iterrows():
-        if carbon_calc_method == "Main Engine Consumption":
-            total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
-        else:
-            total_fuel = vessel["Boil_Off_Rate_percent"] * vessel["Capacity_CBM"] / 1000  # simple BOR based CO2 logic
-
-        auto_co2 = total_fuel * 3.114
-        carbon_cost = auto_co2 * ets_price
-        fuel_cost = total_fuel * lng_bunker_price
-        margin_cost = vessel["Margin"]
-        breakeven = fuel_cost + carbon_cost + margin_cost
-
-        breakevens.append({
-            "Vessel_ID": vessel["Vessel_ID"],
-            "Vessel": vessel["Name"],
-            "Fuel Cost": fuel_cost,
-            "Carbon Cost": carbon_cost,
-            "Margin": margin_cost,
-            "Breakeven Spot (USD/day)": breakeven
-        })
-
-        total_co2_emissions.append(auto_co2)
-
-        if base_spot_rate > breakeven:
-            spot_decisions.append("✅ Spot Recommended")
-        else:
-            spot_decisions.append("❌ TC/Idle Preferred")
-
-    results_df = pd.DataFrame(breakevens)
-    results_df["Total CO₂ (t/day)"] = [f"{x:,.1f}" for x in total_co2_emissions]
-    results_df["Decision"] = spot_decisions
-
-    st.dataframe(
-        results_df.style.set_properties(**{'text-align': 'center', 'width': '100px'}).set_table_styles([
-            {'selector': 'th', 'props': [('text-align', 'center')]}
-        ])
-    )
