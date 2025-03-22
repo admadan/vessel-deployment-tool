@@ -52,7 +52,6 @@ base_spot_rate = st.sidebar.slider("Spot Rate (USD/day)", 5000, 150000, get_valu
 base_tc_rate = st.sidebar.slider("TC Rate (USD/day)", 5000, 140000, get_value("base_tc_rate", 50000), step=1000)
 carbon_calc_method = st.sidebar.radio("Carbon Cost Based On", ["Main Engine Consumption", "Boil Off Rate"], index=["Main Engine Consumption", "Boil Off Rate"].index(get_value("carbon_calc_method", "Main Engine Consumption")))
 
-
 # ----------------------- MAIN PANEL -----------------------
 st.title("LNG Fleet Deployment Simulator")
 
@@ -144,8 +143,6 @@ for idx, row in vessel_data.iterrows():
 
 st.markdown("**ℹ️ Spot/TC Recommendation Logic:** The model compares each vessel's breakeven with the Spot Rate. If Spot > Breakeven, Spot is recommended. Otherwise, TC or Idle is preferred.")
 
-
-
 # ------------------ Deployment Simulation Section ------------------
 st.header("Deployment Simulation Results")
 with st.spinner("Calculating breakevens..."):
@@ -167,8 +164,10 @@ with st.spinner("Calculating breakevens..."):
 
         margin_cost = vessel["Margin"]
         breakeven = fuel_cost + carbon_cost + fueleu_penalty_cost + margin_cost
+        voyage_fueleu_penalty_cost = fueleu_penalty_cost
 
         results.append({
+            "FuelEU Penalty for Voyage ($/day)": f"{voyage_fueleu_penalty_cost:,.1f}",
             "Vessel": vessel["Name"],
             "Fuel Cost ($/day)": f"{fuel_cost:,.1f}",
             "Carbon Cost ($/day)": f"{carbon_cost:,.1f}",
@@ -182,8 +181,6 @@ with st.spinner("Calculating breakevens..."):
     st.dataframe(df_result.style.set_properties(**{'text-align': 'center'}).set_table_styles([
         {'selector': 'th', 'props': [('text-align', 'center')]}
     ]))
-
-
 
 
 # Voyage Simulation Section
