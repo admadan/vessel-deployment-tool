@@ -12,13 +12,14 @@ scenario_name = st.sidebar.text_input("Scenario Name", value="My Scenario")
 ets_price = st.sidebar.slider("EU ETS Carbon Price (€/t CO₂)", 60, 150, 95)
 base_spot_rate = st.sidebar.slider("Base Spot Rate (USD/day)", 40000, 120000, 60000)
 demand_level = st.sidebar.slider("Market Tightness (Demand)", 50, 200, 100)
+lng_bunker_price = st.sidebar.slider("LNG Bunker Price ($/ton)", 600, 1000, 730)
 
 st.title("LNG Deployment Simulator for 10 Vessels")
 st.header("1️⃣ Vessel Performance Inputs")
 
 # ----------------------- VESSEL INPUTS -----------------------
 default_data = [
-    {"name": f"Vessel {i+1}", "fuel": 120 if i < 5 else 140, "co2": 120 if i < 5 else 140, "bor": 0.07 if i < 5 else 0.1, "opex": 10000 if i < 5 else 12000}
+    {"name": f"Vessel {i+1}", "fuel": 120 if i < 5 else 140, "aux": 5, "bor": 0.07 if i < 5 else 0.1, "opex": 10000 if i < 5 else 12000, "margin": 2000}
     for i in range(10)
 ]
 
@@ -27,11 +28,18 @@ vessel_inputs = []
 for i in range(10):
     with st.expander(f"Vessel {i+1} Inputs"):
         name = st.text_input(f"Name for Vessel {i+1}", value=default_data[i]["name"])
-        fuel = st.number_input(f"Fuel Consumption (tons/day) - Vessel {i+1}", value=default_data[i]["fuel"])
-        co2 = st.number_input(f"CO₂ Emissions (tons/day) - Vessel {i+1}", value=default_data[i]["co2"])
+        fuel = st.number_input(f"Main Engine Fuel Consumption (tons/day) - Vessel {i+1}", value=default_data[i]["fuel"])
+        aux = st.number_input(f"Auxiliary Engine Load (tons/day) - Vessel {i+1}", value=default_data[i]["aux"])
         bor = st.number_input(f"Boil-Off Rate (%/day) - Vessel {i+1}", value=default_data[i]["bor"])
         opex = st.number_input(f"OPEX (USD/day) - Vessel {i+1}", value=default_data[i]["opex"])
-        vessel_inputs.append({"name": name, "fuel": fuel, "co2": co2, "bor": bor, "opex": opex})
+        margin = st.number_input(f"Maintenance Margin (USD/day) - Vessel {i+1}", value=default_data[i]["margin"])
+
+        total_fuel = fuel + aux
+        auto_co2 = total_fuel * 3.114
+
+        st.info(f"Auto-calculated CO₂ Emissions: {auto_co2:.2f} tons/day")
+
+        vessel_inputs.append({"name": name, "fuel": fuel, "aux": aux, "bor": bor, "opex": opex, "margin": margin, "co2": auto_co2})
 
 # ----------------------- SIMULATION -----------------------
 st.header("2️⃣ Simulation Results")
@@ -41,8 +49,8 @@ breakevens = []
 
 for vessel in vessel_inputs:
     carbon_cost = vessel["co2"] * ets_price
-    fuel_cost = vessel["fuel"] * 730
-    breakeven = fuel_cost + carbon_cost + vessel["opex"]
+    fuel_cost = (vessel["fuel"] + vessel["aux"]) * lng_bunker_price
+    breakeven = fuel_cost + carbon_cost + vessel["opex"] + vessel["margin"]
     breakevens.append(breakeven)
 
     if base_spot_rate > breakeven:
