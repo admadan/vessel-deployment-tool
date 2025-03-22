@@ -56,8 +56,8 @@ else:
 st.sidebar.markdown(f"**Market Tightness (0-1):** {market_tightness:.2f}")
 
 # Spot and TC rate suggestion
-base_spot_rate = st.sidebar.number_input("Current Spot Rate (USD/day)", value=60000)
-base_tc_rate = st.sidebar.number_input("Current TC Rate (USD/day)", value=50000)
+base_spot_rate = st.sidebar.slider("Current Spot Rate (USD/day)", 40000, 150000, 60000, step=1000)
+base_tc_rate = st.sidebar.slider("Current TC Rate (USD/day)", 30000, 140000, 50000, step=1000)
 
 # ----------------------- MAIN PANEL -----------------------
 st.title("LNG Fleet Deployment Simulator")
@@ -85,6 +85,7 @@ for index, vessel in edited_df.iterrows():
 
 # ----------------------- DISPLAY RESULTS -----------------------
 results = pd.DataFrame({
+    "Vessel_ID": edited_df["Vessel_ID"],
     "Vessel": edited_df["Name"],
     "Breakeven Spot (USD/day)": breakevens,
     "Decision": spot_decisions
