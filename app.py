@@ -90,6 +90,8 @@ for index, vessel in vessel_data.iterrows():
     breakevens.append({
         "Vessel_ID": vessel["Vessel_ID"],
         "Vessel": vessel["Name"],
+        "Main_Engine_Consumption_MT_per_day": vessel["Main_Engine_Consumption_MT_per_day"],
+        "Generator_Consumption_MT_per_day": vessel["Generator_Consumption_MT_per_day"],
         "Fuel Cost": fuel_cost,
         "Carbon Cost": carbon_cost,
         "Margin": margin_cost,
