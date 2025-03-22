@@ -169,13 +169,13 @@ with st.spinner("Calculating breakevens based on realistic speed curves..."):
         breakevens.append({
             "Vessel_ID": vessel["Vessel_ID"],
             "Vessel": vessel["Name"],
-            "Fuel Cost ($/day)": round(fuel_cost, 0),
-            "Carbon Cost ($/day)": round(carbon_cost, 0),
-            "Margin ($/day)": round(margin_cost, 0),
-            "Breakeven Spot ($/day)": round(breakeven, 0)
+            "Fuel Cost ($/day)": round(fuel_cost, 1),
+            "Carbon Cost ($/day)": round(carbon_cost, 1),
+            "Margin ($/day)": round(margin_cost, 1),
+            "Breakeven Spot ($/day)": round(breakeven, 1)
         })
 
-        total_co2_emissions.append(auto_co2)
+        total_co2_emissions.append(round(auto_co2, 1))
 
         if base_spot_rate > breakeven:
             spot_decisions.append("✅ Spot Recommended")
@@ -183,7 +183,7 @@ with st.spinner("Calculating breakevens based on realistic speed curves..."):
             spot_decisions.append("❌ TC/Idle Preferred")
 
     results_df = pd.DataFrame(breakevens)
-    results_df["Total CO₂ (t/day)"] = [f"{x:,.1f}" for x in total_co2_emissions]
+    results_df["Total CO₂ (t/day)"] = total_co2_emissions
     results_df["Decision"] = spot_decisions
 
     st.dataframe(
@@ -191,4 +191,5 @@ with st.spinner("Calculating breakevens based on realistic speed curves..."):
             {'selector': 'th', 'props': [('text-align', 'center')]}
         ])
     )
+
 
