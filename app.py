@@ -91,6 +91,10 @@ scenario_config = {
 }
 
 with st.expander("💾 Save or Load Simulation"):
+    st.markdown("### 🔍 Sensitivity Summary")
+    market_sensitivity = 'High' if market_tightness > 0.7 or base_spot_rate > 80000 else 'Moderate'
+    chartering_sensitivity = 'High' if vessel_data['FuelEU_GHG_Compliance'].mean() < required_ghg_target else 'Moderate'
+    st.info(f"**Market Sensitivity:** {market_sensitivity} | **Chartering Sensitivity:** {chartering_sensitivity}")
     if st.button("Save Current Scenario"):
         st.download_button("Download JSON", data=json.dumps(scenario_config), file_name=f"{scenario_name}_scenario.json")
 
@@ -181,6 +185,7 @@ with st.spinner("Calculating breakevens..."):
     st.dataframe(df_result.style.set_properties(**{'text-align': 'center'}).set_table_styles([
         {'selector': 'th', 'props': [('text-align', 'center')]}
     ]))
+
 
 
 # Voyage Simulation Section
