@@ -14,11 +14,12 @@ vessel_data = pd.DataFrame({
         "LNG Carrier Epsilon", "LNG Carrier Zeta", "LNG Carrier Theta", "LNG Carrier Iota",
         "LNG Carrier Kappa", "LNG Carrier Lambda"
     ],
-    "Sister_Ship_Group": ["A", "A", "A", "B", "B", "B", "C", "C", "C", "C"],
     "Capacity_CBM": [160000] * 10,
     "FuelEU_GHG_Compliance": [65, 65, 65, 80, 80, 80, 95, 95, 95, 95],
     "CII_Rating": ["A", "A", "A", "B", "B", "B", "C", "C", "C", "C"],
-    "Fuel_Consumption_MT_per_day": [70, 72, 74, 85, 88, 90, 100, 102, 105, 107]
+    "Main_Engine_Consumption_MT_per_day": [70, 72, 74, 85, 88, 90, 100, 102, 105, 107],
+    "Generator_Consumption_MT_per_day": [5, 5, 5, 6, 6, 6, 7, 7, 7, 7],
+    "Boil_Off_Rate_percent": [0.08, 0.08, 0.08, 0.09, 0.09, 0.09, 0.07, 0.07, 0.07, 0.07]
 })
 
 # ----------------------- SIDEBAR INPUTS -----------------------
@@ -60,23 +61,20 @@ base_tc_rate = st.sidebar.number_input("Current TC Rate (USD/day)", value=50000)
 
 # ----------------------- MAIN PANEL -----------------------
 st.title("LNG Fleet Deployment Simulator")
-st.dataframe(vessel_data.style.set_table_styles([{
-    'selector': 'th',
-    'props': [('text-align', 'center')]
-}, {
-    'selector': 'td',
-    'props': [('text-align', 'center')]
-}]))
+
+# Editable vessel profile table
+edited_df = st.data_editor(vessel_data, num_rows="dynamic", use_container_width=True)
 
 st.header("2️⃣ Simulation Results")
 
 spot_decisions = []
 breakevens = []
 
-for index, vessel in vessel_data.iterrows():
-    auto_co2 = vessel["Fuel_Consumption_MT_per_day"] * 3.17
+for index, vessel in edited_df.iterrows():
+    total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
+    auto_co2 = total_fuel * 3.17
     carbon_cost = auto_co2 * ets_price
-    fuel_cost = vessel["Fuel_Consumption_MT_per_day"] * lng_bunker_price
+    fuel_cost = total_fuel * lng_bunker_price
     breakeven = fuel_cost + carbon_cost + 10000  # Assuming static OPEX for now
     breakevens.append(breakeven)
 
@@ -87,18 +85,12 @@ for index, vessel in vessel_data.iterrows():
 
 # ----------------------- DISPLAY RESULTS -----------------------
 results = pd.DataFrame({
-    "Vessel": vessel_data["Name"],
+    "Vessel": edited_df["Name"],
     "Breakeven Spot (USD/day)": breakevens,
     "Decision": spot_decisions
 })
 
-st.dataframe(results.style.set_table_styles([{
-    'selector': 'th',
-    'props': [('text-align', 'center')]
-}, {
-    'selector': 'td',
-    'props': [('text-align', 'center')]
-}]))
+st.dataframe(results)
 
 # ----------------------- MARKET BALANCE FEEDBACK -----------------------
 st.subheader("🌍 Market Equilibrium Result")
