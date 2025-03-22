@@ -102,11 +102,10 @@ for idx, row in vessel_data.iterrows():
                 ref_total_consumption = row["Main_Engine_Consumption_MT_per_day"] + row["Generator_Consumption_MT_per_day"]
                 total_consumption = [ref_total_consumption * (speed / base_speed) ** 3 for speed in speed_range]
                 df_curve = pd.DataFrame({
-    "Speed (knots)": speed_range,
-    "Total Consumption (tons/day)": total_consumption
-}).set_index("Speed (knots)")
-st.line_chart(df_curve)
-
+                    "Speed (knots)": speed_range,
+                    "Total Consumption (tons/day)": total_consumption
+                }).set_index("Speed (knots)")
+                st.line_chart(df_curve)
 
 # ----------------------- Simulation Section -----------------------
 st.header("Deployment Simulation Results")
@@ -153,4 +152,3 @@ with st.spinner("Calculating breakevens based on realistic speed curves..."):
             {'selector': 'th', 'props': [('text-align', 'center')]}
         ])
     )
-
