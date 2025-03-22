@@ -53,6 +53,7 @@ base_tc_rate = st.sidebar.slider("TC Rate (USD/day)", 5000, 140000, get_value("b
 carbon_calc_method = st.sidebar.radio("Carbon Cost Based On", ["Main Engine Consumption", "Boil Off Rate"], index=["Main Engine Consumption", "Boil Off Rate"].index(get_value("carbon_calc_method", "Main Engine Consumption")))
 
 
+
 # ----------------------- MAIN PANEL -----------------------
 st.title("LNG Fleet Deployment Simulator")
 
@@ -154,40 +155,47 @@ st.markdown("**ℹ️ Spot/TC Recommendation Logic:** The model compares each ve
 
 
 
-# Deployment Simulation Section
+# ------------------ Deployment Simulation Section ------------------
 st.header("Deployment Simulation Results")
+with st.spinner("Calculating breakevens..."):
+    results = []
+    for idx, vessel in vessel_data.iterrows():
+        ref_total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
+        adjusted_fuel = ref_total_fuel * (assumed_speed / assumed_speed) ** 3
 
-spot_decisions = []
-breakevens = []
-total_co2_emissions = []
-for index, vessel in vessel_data.iterrows():
-    ref_total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
-    adjusted_fuel = ref_total_fuel * (assumed_speed / assumed_speed) ** 3
-    if carbon_calc_method == "Boil Off Rate":
-        adjusted_fuel = vessel["Boil_Off_Rate_percent"] * vessel["Capacity_CBM"] / 1000
+        if carbon_calc_method == "Boil Off Rate":
+            adjusted_fuel = vessel["Boil_Off_Rate_percent"] * vessel["Capacity_CBM"] / 1000
 
-    auto_co2 = adjusted_fuel * 3.114
-    carbon_cost = auto_co2 * ets_price
-    fuel_cost = adjusted_fuel * lng_bunker_price
-    margin_cost = vessel["Margin"]
-    breakeven = fuel_cost + carbon_cost + margin_cost
+        auto_co2 = adjusted_fuel * 3.114
+        carbon_cost = auto_co2 * ets_price
+        fuel_cost = adjusted_fuel * lng_bunker_price
 
-    breakevens.append({
-        "Vessel_ID": vessel["Vessel_ID"],
-        "Vessel": vessel["Name"],
-        "Fuel Cost ($/day)": f"{fuel_cost:,.1f}",
-        "Carbon Cost ($/day)": f"{carbon_cost:,.1f}",
-        "Margin ($/day)": f"{margin_cost:,.1f}",
-        "Breakeven Spot ($/day)": f"{breakeven:,.1f}"
-    })
+        # FuelEU shortfall penalty
+        compliance_gap = max(0, required_ghg_target - vessel["FuelEU_GHG_Compliance"])
+        fueleu_penalty_cost = compliance_gap / 100 * auto_co2 * fueleu_penalty_per_ton
 
-    total_co2_emissions.append(f"{auto_co2:,.1f}")
-    spot_decisions.append("✅ Spot Recommended" if base_spot_rate > breakeven else "❌ TC/Idle Preferred")
+        margin_cost = vessel["Margin"]
+        breakeven = fuel_cost + carbon_cost + fueleu_penalty_cost + margin_cost
 
-results_df = pd.DataFrame(breakevens)
-results_df["Total CO₂ (t/day)"] = total_co2_emissions
-results_df["Decision"] = spot_decisions
-st.dataframe(results_df)
+        results.append({
+            "Vessel": vessel["Name"],
+            "Fuel Cost ($/day)": f"{fuel_cost:,.1f}",
+            "Carbon Cost ($/day)": f"{carbon_cost:,.1f}",
+            "FuelEU Penalty ($/day)": f"{fueleu_penalty_cost:,.1f}",
+            "Margin ($/day)": f"{margin_cost:,.1f}",
+            "Breakeven Spot ($/day)": f"{breakeven:,.1f}",
+            "Decision": "✅ Spot Recommended" if base_spot_rate > breakeven else "❌ TC/Idle Preferred"
+        })
+
+    df_result = pd.DataFrame(results)
+    st.dataframe(df_result.style.set_properties(**{'text-align': 'center'}).set_table_styles([
+        {'selector': 'th', 'props': [('text-align', 'center')]}
+    ]))
+
+
+
+
+
 
 # Voyage Simulation Section
 st.header("Voyage Simulation Advisor")
