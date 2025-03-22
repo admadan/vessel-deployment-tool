@@ -95,6 +95,9 @@ for idx, row in vessel_data.iterrows():
                     vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (%)", value=row["FuelEU_GHG_Compliance"], key=f"ghg_{idx}")
                 st.markdown("---")
                 st.caption("Speed & Consumption Curve (auto-adjusted to Freight Market speed input)")
+
+                # Dropdown to select other vessel for comparison
+                compare_vessel = st.selectbox("Compare with another vessel", [v for i, v in enumerate(vessel_data['Name']) if i != idx], key=f"compare_{idx}")
                 min_speed = max(8, assumed_speed - 3)
                 max_speed = min(20, assumed_speed + 3)
                 speed_range = list(range(int(min_speed), int(max_speed) + 1))
@@ -105,6 +108,13 @@ for idx, row in vessel_data.iterrows():
                     "Speed (knots)": speed_range,
                     "Total Consumption (tons/day)": total_consumption
                 }).set_index("Speed (knots)")
+                                # Get the comparison vessel row
+                compare_row = vessel_data[vessel_data['Name'] == compare_vessel].iloc[0]
+                compare_ref_consumption = compare_row["Main_Engine_Consumption_MT_per_day"] + compare_row["Generator_Consumption_MT_per_day"]
+                compare_total_consumption = [compare_ref_consumption * (speed / base_speed) ** 3 for speed in speed_range]
+
+                df_curve[compare_vessel] = compare_total_consumption
+                df_curve.rename(columns={"Total Consumption (tons/day)": row["Name"]}, inplace=True)
                 st.line_chart(df_curve)
 
 # ----------------------- Simulation Section -----------------------
