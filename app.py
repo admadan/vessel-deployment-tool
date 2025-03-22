@@ -4,6 +4,17 @@ import pandas as pd
 import json
 import matplotlib.pyplot as plt
 
+def plot_sc_curve(speeds, consumptions):
+    fig, ax = plt.subplots()
+    ax.plot(speeds, consumptions, marker='o', linestyle='-')
+    ax.set_xlim(0, 25)
+    ax.set_ylim(0, 150)
+    ax.set_xlabel('Speed (knots)')
+    ax.set_ylabel('Total Consumption (tons/day)')
+    ax.set_title('Speed & Consumption Curve')
+    ax.grid(True)
+    return fig
+
 st.set_page_config(page_title="LNG 10-Vessel Deployment Tool", layout="wide")
 
 # ----------------------- SIDEBAR -----------------------
