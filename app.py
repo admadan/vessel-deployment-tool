@@ -114,8 +114,7 @@ for idx, row in vessel_data.iterrows():
             vessel_data.at[idx, "CII_Rating"] = st.selectbox("CII Rating", options=["A", "B", "C", "D", "E"], index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]), key=f"cii_{idx}")
             vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (gCO2e/MJ)", value=row["FuelEU_GHG_Compliance"], key=f"ghg_{idx}")
 
-# ----------------------- Compliance Section -----------------------
-[...remaining code stays unchanged...]
+
 # ----------------------- Compliance Section -----------------------
 st.subheader("🌱 Regulatory Compliance Settings")
 col1, col2 = st.columns(2)
