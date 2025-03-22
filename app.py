@@ -106,7 +106,12 @@ for index, vessel in vessel_data.iterrows():
         spot_decisions.append("❌ TC/Idle Preferred")
 
 results_df = pd.DataFrame(breakevens)
-results_df["Total CO₂ (t/day)"] = total_co2_emissions
+results_df["Total CO₂ (t/day)"] = np.round(total_co2_emissions, 1)
+results_df["Fuel Cost"] = results_df["Fuel Cost"].apply(lambda x: f"{x:,.1f}")
+results_df["Carbon Cost"] = results_df["Carbon Cost"].apply(lambda x: f"{x:,.1f}")
+results_df["Margin"] = results_df["Margin"].apply(lambda x: f"{x:,.1f}")
+results_df["Breakeven Spot (USD/day)"] = results_df["Breakeven Spot (USD/day)"].apply(lambda x: f"{x:,.1f}")
+results_df["Total CO₂ (t/day)"] = [f"{x:.1f}" for x in total_co2_emissions]
 results_df = results_df[["Vessel_ID", "Vessel", "Main_Engine_Consumption_MT_per_day", "Generator_Consumption_MT_per_day", "Total CO₂ (t/day)", "Fuel Cost", "Carbon Cost", "Margin", "Breakeven Spot (USD/day)"]]
 results_df["Decision"] = spot_decisions
 results_df["Total CO₂ (t/day)"] = total_co2_emissions
