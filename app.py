@@ -13,7 +13,6 @@ ets_price = st.sidebar.slider("EU ETS Carbon Price (€/t CO₂)", 60, 150, 95)
 lng_bunker_price = st.sidebar.slider("LNG Bunker Price ($/ton)", 600, 1000, 730)
 
 st.sidebar.header("💡 Freight Market Inputs")
-
 fleet_size_number_supply = st.sidebar.number_input("Fleet Size (# of Ships)", value=3131, step=1, format="%d")
 fleet_size_dwt_supply_in_dwt_million = st.sidebar.number_input("Supply (M DWT)", value=254.1, step=0.1)
 utilization_constant = st.sidebar.number_input("Utilization Factor", value=0.95, step=0.01)
@@ -21,7 +20,7 @@ assumed_speed = st.sidebar.number_input("Speed (knots)", value=11.0, step=0.1)
 sea_margin = st.sidebar.number_input("Sea Margin (%)", value=0.05, step=0.01)
 assumed_laden_days = st.sidebar.number_input("Laden Days Fraction", value=0.4, step=0.01)
 demand_billion_ton_mile = st.sidebar.number_input("Demand (Bn Ton Mile)", value=10396.0, step=10.0)
-# Removed duplicate inputs block
+auto_tightness = st.sidebar.checkbox("Auto-calculate market tightness", value=True)
 
 # Tightness calculation
 dwt_utilization = (fleet_size_dwt_supply_in_dwt_million * 1_000_000 / fleet_size_number_supply) * utilization_constant
@@ -40,8 +39,8 @@ with st.sidebar.expander("🔍 Market Calculations"):
     st.markdown(f"**Max Supply:** {maximum_supply_billion_ton_mile:,.1f} Bn Ton Mile")
     st.markdown(f"**Equilibrium:** {equilibrium:,.1f} Bn Ton Mile")
     market_status = 'Excess Supply' if equilibrium < 0 else 'Excess Demand'
-status_color = 'red' if market_status == 'Excess Supply' else 'green'
-st.markdown(f"**Market Condition:** <span style='color:{status_color}'>{market_status}</span>", unsafe_allow_html=True)
+    status_color = 'red' if market_status == 'Excess Supply' else 'green'
+    st.markdown(f"**Market Condition:** <span style='color:{status_color}'>{market_status}</span>", unsafe_allow_html=True)
     st.markdown(f"**Tightness:** {market_tightness:.2f}")
 
 base_spot_rate = st.sidebar.slider("Spot Rate (USD/day)", 5000, 150000, 60000, step=1000)
