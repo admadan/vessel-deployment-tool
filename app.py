@@ -136,3 +136,50 @@ with st.sidebar.expander("💾 Save/Load Scenario"):
     if uploaded_file:
         st.session_state.loaded_data = json.load(uploaded_file)
         st.experimental_rerun()
+
+
+# ----------------------- Simulation Section -----------------------
+st.header("Deployment Simulation Results")
+with st.spinner("Calculating breakevens and recommendations..."):
+    spot_decisions = []
+    breakevens = []
+    total_co2_emissions = []
+
+    for index, vessel in vessel_data.iterrows():
+        if carbon_calc_method == "Main Engine Consumption":
+            total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
+        else:
+            total_fuel = vessel["Boil_Off_Rate_percent"] * vessel["Capacity_CBM"] / 1000  # BOR based logic
+
+        auto_co2 = total_fuel * 3.114
+        carbon_cost = auto_co2 * ets_price
+        fuel_cost = total_fuel * lng_bunker_price
+        margin_cost = vessel["Margin"]
+        breakeven = fuel_cost + carbon_cost + margin_cost
+
+        breakevens.append({
+            "Vessel_ID": vessel["Vessel_ID"],
+            "Vessel": vessel["Name"],
+            "Fuel Cost ($/day)": round(fuel_cost, 0),
+            "Carbon Cost ($/day)": round(carbon_cost, 0),
+            "Margin ($/day)": round(margin_cost, 0),
+            "Breakeven Spot ($/day)": round(breakeven, 0)
+        })
+
+        total_co2_emissions.append(auto_co2)
+
+        if base_spot_rate > breakeven:
+            spot_decisions.append("✅ Spot Recommended")
+        else:
+            spot_decisions.append("❌ TC/Idle Preferred")
+
+    results_df = pd.DataFrame(breakevens)
+    results_df["Total CO₂ (t/day)"] = [f"{x:,.1f}" for x in total_co2_emissions]
+    results_df["Decision"] = spot_decisions
+
+    st.dataframe(
+        results_df.style.set_properties(**{'text-align': 'center'}).set_table_styles([
+            {'selector': 'th', 'props': [('text-align', 'center')]}
+        ])
+    )
+
