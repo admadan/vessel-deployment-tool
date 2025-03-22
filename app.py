@@ -43,6 +43,7 @@ base_tc_rate = st.sidebar.slider("Current TC Rate (USD/day)", 5000, 140000, 5000
 # ----------------------- MAIN PANEL -----------------------
 st.title("LNG Fleet Deployment Simulator")
 
+st.header("Vessel Profile Input")
 vessel_data = pd.DataFrame({
     "Vessel_ID": range(1, 11),
     "Name": [
@@ -59,15 +60,26 @@ vessel_data = pd.DataFrame({
     "Margin": [2000] * 10
 })
 
-edited_df = st.data_editor(vessel_data, num_rows="dynamic", use_container_width=True)
+for idx, row in vessel_data.iterrows():
+    with st.expander(f"{row['Name']}"):
+        col1, col2 = st.columns(2)
+        with col1:
+            vessel_data.at[idx, "Main_Engine_Consumption_MT_per_day"] = st.number_input(f"Main Engine Consumption (tons/day) - {row['Name']}", value=row["Main_Engine_Consumption_MT_per_day"], key=f"me_{idx}")
+        with col2:
+            vessel_data.at[idx, "Generator_Consumption_MT_per_day"] = st.number_input(f"Generator Consumption (tons/day) - {row['Name']}", value=row["Generator_Consumption_MT_per_day"], key=f"gen_{idx}")
 
+        with st.expander("More Details"):
+            vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input(f"Boil Off Rate (%/day) - {row['Name']}", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}")
+            vessel_data.at[idx, "Margin"] = st.number_input(f"Margin (USD/day) - {row['Name']}", value=row["Margin"], key=f"margin_{idx}")
+
+# ----------------------- Simulation Section -----------------------
 st.header("2️⃣ Simulation Results")
 
 spot_decisions = []
 breakevens = []
 total_co2_emissions = []
 
-for index, vessel in edited_df.iterrows():
+for index, vessel in vessel_data.iterrows():
     total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
     auto_co2 = total_fuel * 3.114
     carbon_cost = auto_co2 * ets_price
@@ -97,12 +109,12 @@ results_df["Total CO₂ (t/day)"] = total_co2_emissions
 
 st.dataframe(results_df)
 
-# ----------------------- SAVE / LOAD SCENARIOS -----------------------
+# ----------------------- Save / Load Scenarios -----------------------
 if "saved_scenarios" not in st.session_state:
     st.session_state["saved_scenarios"] = {}
 
 if st.button("💾 Save Scenario"):
-    st.session_state["saved_scenarios"][scenario_name] = edited_df.to_dict()
+    st.session_state["saved_scenarios"][scenario_name] = vessel_data.to_dict()
     st.success(f"Scenario '{scenario_name}' saved.")
 
 if st.session_state["saved_scenarios"]:
@@ -110,7 +122,7 @@ if st.session_state["saved_scenarios"]:
     for key in st.session_state["saved_scenarios"]:
         st.text(f"- {key}")
 
-# ----------------------- MARKET BALANCE FEEDBACK -----------------------
+# ----------------------- Market Balance Feedback -----------------------
 st.subheader("🌍 Market Equilibrium Result")
 result_label = "**Excess Supply**" if equilibrium < 0 else "**Excess Demand**"
 st.markdown(f"Result: {result_label}  |  **Δ:** {equilibrium:,.2f} Billion Ton Miles")
