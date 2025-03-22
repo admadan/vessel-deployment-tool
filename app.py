@@ -6,23 +6,7 @@ from fpdf import FPDF
 
 st.set_page_config(page_title="LNG 10-Vessel Deployment Tool", layout="wide")
 
-# ----------------------- DEFAULT VESSEL DATA -----------------------
-vessel_data = pd.DataFrame({
-    "Vessel_ID": range(1, 11),
-    "Name": [
-        "LNG Carrier Alpha", "LNG Carrier Beta", "LNG Carrier Gamma", "LNG Carrier Delta",
-        "LNG Carrier Epsilon", "LNG Carrier Zeta", "LNG Carrier Theta", "LNG Carrier Iota",
-        "LNG Carrier Kappa", "LNG Carrier Lambda"
-    ],
-    "Capacity_CBM": [160000] * 10,
-    "FuelEU_GHG_Compliance": [65, 65, 65, 80, 80, 80, 95, 95, 95, 95],
-    "CII_Rating": ["A", "A", "A", "B", "B", "B", "C", "C", "C", "C"],
-    "Main_Engine_Consumption_MT_per_day": [70, 72, 74, 85, 88, 90, 100, 102, 105, 107],
-    "Generator_Consumption_MT_per_day": [5, 5, 5, 6, 6, 6, 7, 7, 7, 7],
-    "Boil_Off_Rate_percent": [0.08, 0.08, 0.08, 0.09, 0.09, 0.09, 0.07, 0.07, 0.07, 0.07]
-})
-
-# ----------------------- SIDEBAR INPUTS -----------------------
+# ----------------------- SIDEBAR (POSITIONED LEFT) -----------------------
 st.sidebar.title("⚙️ Scenario & Market Inputs")
 scenario_name = st.sidebar.text_input("Scenario Name", value="My Scenario")
 ets_price = st.sidebar.slider("EU ETS Carbon Price (€/t CO₂)", 60, 150, 95)
@@ -63,6 +47,21 @@ base_tc_rate = st.sidebar.slider("Current TC Rate (USD/day)", 30000, 140000, 500
 st.title("LNG Fleet Deployment Simulator")
 
 # Editable vessel profile table
+vessel_data = pd.DataFrame({
+    "Vessel_ID": range(1, 11),
+    "Name": [
+        "LNG Carrier Alpha", "LNG Carrier Beta", "LNG Carrier Gamma", "LNG Carrier Delta",
+        "LNG Carrier Epsilon", "LNG Carrier Zeta", "LNG Carrier Theta", "LNG Carrier Iota",
+        "LNG Carrier Kappa", "LNG Carrier Lambda"
+    ],
+    "Capacity_CBM": [160000] * 10,
+    "FuelEU_GHG_Compliance": [65, 65, 65, 80, 80, 80, 95, 95, 95, 95],
+    "CII_Rating": ["A", "A", "A", "B", "B", "B", "C", "C", "C", "C"],
+    "Main_Engine_Consumption_MT_per_day": [70, 72, 74, 85, 88, 90, 100, 102, 105, 107],
+    "Generator_Consumption_MT_per_day": [5, 5, 5, 6, 6, 6, 7, 7, 7, 7],
+    "Boil_Off_Rate_percent": [0.08, 0.08, 0.08, 0.09, 0.09, 0.09, 0.07, 0.07, 0.07, 0.07]
+})
+
 edited_df = st.data_editor(vessel_data, num_rows="dynamic", use_container_width=True)
 
 st.header("2️⃣ Simulation Results")
