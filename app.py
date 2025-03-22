@@ -72,16 +72,34 @@ vessel_data = pd.DataFrame({
 })
 
 # Save/Load Section
-with st.expander("💾 Save or Load Simulation"):
-    if st.button("Save Current Simulation"):
-        st.download_button("Download JSON", data=vessel_data.to_json(orient='records'), file_name=f"{scenario_name}_simulation.json")
+scenario_config = {
+    'scenario_name': scenario_name,
+    'ets_price': ets_price,
+    'lng_bunker_price': lng_bunker_price,
+    'fleet_size_number_supply': fleet_size_number_supply,
+    'fleet_size_dwt_supply_in_dwt_million': fleet_size_dwt_supply_in_dwt_million,
+    'utilization_constant': utilization_constant,
+    'assumed_speed': assumed_speed,
+    'sea_margin': sea_margin,
+    'assumed_laden_days': assumed_laden_days,
+    'demand_billion_ton_mile': demand_billion_ton_mile,
+    'auto_tightness': auto_tightness,
+    'base_spot_rate': base_spot_rate,
+    'base_tc_rate': base_tc_rate,
+    'carbon_calc_method': carbon_calc_method,
+    'vessel_data': vessel_data.to_dict(orient='records')
+}
 
-    uploaded_file = st.file_uploader("Upload Previous Simulation", type="json")
+with st.expander("💾 Save or Load Simulation"):
+    if st.button("Save Current Scenario"):
+        st.download_button("Download JSON", data=json.dumps(scenario_config), file_name=f"{scenario_name}_scenario.json")
+
+    uploaded_file = st.file_uploader("Upload Previous Scenario", type="json")
     if uploaded_file is not None:
-        uploaded_data = pd.read_json(uploaded_file)
-        if not uploaded_data.empty:
-            vessel_data.update(uploaded_data)
-            st.success("Simulation loaded successfully!")
+        loaded_config = json.load(uploaded_file)
+        vessel_data = pd.DataFrame(loaded_config['vessel_data'])
+        st.session_state.loaded_data = loaded_config
+        st.success("Scenario loaded successfully!")
 
 cols = st.columns(2)
 for idx, row in vessel_data.iterrows():
