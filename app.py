@@ -13,6 +13,11 @@ ets_price = st.sidebar.slider("EU ETS Carbon Price (€/t CO₂)", 60, 150, 95)
 lng_bunker_price = st.sidebar.slider("LNG Bunker Price ($/ton)", 600, 1000, 730)
 
 st.sidebar.header("💡 Freight Market Inputs")
+
+st.sidebar.markdown(f"**DWT Utilization:** {dwt_utilization:,.1f} MT")
+st.sidebar.markdown(f"**Max Supply:** {maximum_supply_billion_ton_mile:,.1f} Bn Ton Mile")
+st.sidebar.markdown(f"**Equilibrium:** {equilibrium:,.1f} Bn Ton Mile")
+st.sidebar.markdown(f"**Market Condition:** {'Excess Supply' if equilibrium < 0 else 'Excess Demand'}")
 auto_tightness = st.sidebar.checkbox("Auto-calculate market tightness", value=True)
 
 fleet_size_number_supply = st.sidebar.number_input("Fleet Size (# of Ships)", value=3131, step=1, format="%d")
