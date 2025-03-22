@@ -111,4 +111,7 @@ results_df = results_df[["Vessel_ID", "Vessel", "Main_Engine_Consumption_MT_per_
 results_df["Decision"] = spot_decisions
 results_df["Total CO₂ (t/day)"] = total_co2_emissions
 
-st.dataframe(results_df)
+st.dataframe(results_df.style.set_properties(**{'text-align': 'center'}).set_table_styles([{
+    'selector': 'th',
+    'props': [('text-align', 'center')]
+}]))
