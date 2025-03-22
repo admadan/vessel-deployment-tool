@@ -95,46 +95,7 @@ for idx, row in vessel_data.iterrows():
             vessel_data.at[idx, "CII_Rating"] = st.selectbox("CII Rating", options=["A", "B", "C", "D", "E"], index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]), key=f"cii_{idx}")
             vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (gCO2e/MJ)", value=row["FuelEU_GHG_Compliance"], key=f"ghg_{idx}")
 
-st.subheader("💾 Save/Load Scenario")
-scenario_config = {
-    'scenario_name': scenario_name,
-    'ets_price': ets_price,
-    'lng_bunker_price': lng_bunker_price,
-    'fleet_size_number_supply': fleet_size_number_supply,
-    'fleet_size_dwt_supply_in_dwt_million': fleet_size_dwt_supply_in_dwt_million,
-    'utilization_constant': utilization_constant,
-    'assumed_speed': assumed_speed,
-    'sea_margin': sea_margin,
-    'assumed_laden_days': assumed_laden_days,
-    'demand_billion_ton_mile': demand_billion_ton_mile,
-    'auto_tightness': auto_tightness,
-    'base_spot_rate': base_spot_rate,
-    'base_tc_rate': base_tc_rate,
-    'carbon_calc_method': carbon_calc_method,
-    'vessel_data': vessel_data.to_dict(orient='records')
-}
 
-col1, col2 = st.columns(2)
-with col1:
-    json_string = json.dumps(scenario_config)
-    st.download_button("📥 Download Scenario JSON", data=json_string, file_name=f"{scenario_name}_scenario.json")
-with col2:
-    uploaded_file = st.file_uploader("📤 Upload Saved Scenario", type="json")
-    if uploaded_file is not None:
-        loaded_config = json.load(uploaded_file)
-        vessel_data = pd.DataFrame(loaded_config['vessel_data'])
-        st.session_state.loaded_data = loaded_config
-        st.success("Scenario loaded successfully!")
-# ----------------------- Compliance Section -----------------------
-st.subheader("🌱 Regulatory Compliance Settings")
-col1, col2 = st.columns(2)
-with col1:
-    required_ghg_intensity = st.number_input("Required GHG Intensity (gCO2e/MJ)", value=20)
-    st.caption("Regulatory minimum GHG intensity for vessels to comply with FuelEU or other regional rules.")
-
-with col2:
-    penalty_per_excess_unit = st.number_input("Penalty per gCO2e/MJ Over Limit ($/day)", value=1000)
-    st.caption("Penalty applied for each gCO2e/MJ above the required GHG intensity limit.")
 
 # ----------------------- Chartering Sensitivity -----------------------
 st.subheader("📈 Chartering Sensitivity")
@@ -223,3 +184,44 @@ st.dataframe(
 )
 
 st.success(f"🚢 Recommended Vessel for this Voyage: {best_vessel}")
+
+st.subheader("💾 Save/Load Scenario")
+scenario_config = {
+    'scenario_name': scenario_name,
+    'ets_price': ets_price,
+    'lng_bunker_price': lng_bunker_price,
+    'fleet_size_number_supply': fleet_size_number_supply,
+    'fleet_size_dwt_supply_in_dwt_million': fleet_size_dwt_supply_in_dwt_million,
+    'utilization_constant': utilization_constant,
+    'assumed_speed': assumed_speed,
+    'sea_margin': sea_margin,
+    'assumed_laden_days': assumed_laden_days,
+    'demand_billion_ton_mile': demand_billion_ton_mile,
+    'auto_tightness': auto_tightness,
+    'base_spot_rate': base_spot_rate,
+    'base_tc_rate': base_tc_rate,
+    'carbon_calc_method': carbon_calc_method,
+    'vessel_data': vessel_data.to_dict(orient='records')
+}
+
+col1, col2 = st.columns(2)
+with col1:
+    json_string = json.dumps(scenario_config)
+    st.download_button("📥 Download Scenario JSON", data=json_string, file_name=f"{scenario_name}_scenario.json")
+with col2:
+    uploaded_file = st.file_uploader("📤 Upload Saved Scenario", type="json")
+    if uploaded_file is not None:
+        loaded_config = json.load(uploaded_file)
+        vessel_data = pd.DataFrame(loaded_config['vessel_data'])
+        st.session_state.loaded_data = loaded_config
+        st.success("Scenario loaded successfully!")
+# ----------------------- Compliance Section -----------------------
+st.subheader("🌱 Regulatory Compliance Settings")
+col1, col2 = st.columns(2)
+with col1:
+    required_ghg_intensity = st.number_input("Required GHG Intensity (gCO2e/MJ)", value=20)
+    st.caption("Regulatory minimum GHG intensity for vessels to comply with FuelEU or other regional rules.")
+
+with col2:
+    penalty_per_excess_unit = st.number_input("Penalty per gCO2e/MJ Over Limit ($/day)", value=1000)
+    st.caption("Penalty applied for each gCO2e/MJ above the required GHG intensity limit.")
