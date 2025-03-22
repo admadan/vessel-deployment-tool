@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import json
+import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="LNG 10-Vessel Deployment Tool", layout="wide")
 
