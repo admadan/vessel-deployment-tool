@@ -122,7 +122,44 @@ for idx, row in vessel_data.iterrows():
                     vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (%)", value=row["FuelEU_GHG_Compliance"], key=f"ghg_{idx}")
 
 # ----------------------- Simulation Section -----------------------
+
 st.header("Deployment Simulation Results")
+
+# ----------------------- Voyage Simulation Section -----------------------
+st.header("Voyage Simulation Advisor")
+voyage_days = st.number_input("Voyage Duration (days)", min_value=1, value=30)
+
+voyage_results = []
+
+for index, vessel in vessel_data.iterrows():
+    ref_total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
+    adjusted_fuel = ref_total_fuel * (assumed_speed / assumed_speed) ** 3  # simplified scaling
+
+    if carbon_calc_method == "Boil Off Rate":
+        adjusted_fuel = vessel["Boil_Off_Rate_percent"] * vessel["Capacity_CBM"] / 1000
+
+    auto_co2 = adjusted_fuel * 3.114
+    carbon_cost = auto_co2 * ets_price * voyage_days
+    fuel_cost = adjusted_fuel * lng_bunker_price * voyage_days
+    margin_cost = vessel["Margin"] * voyage_days
+
+    total_voyage_cost = fuel_cost + carbon_cost + margin_cost
+    total_freight = base_spot_rate * voyage_days
+    voyage_profit = total_freight - total_voyage_cost
+
+    voyage_results.append({
+        "Vessel": vessel["Name"],
+        "Voyage Cost ($)": f"{total_voyage_cost:,.1f}",
+        "Freight Revenue ($)": f"{total_freight:,.1f}",
+        "Voyage Profit ($)": f"{voyage_profit:,.1f}"
+    })
+
+voyage_df = pd.DataFrame(voyage_results)
+voyage_df_sorted = voyage_df.sort_values(by="Voyage Profit ($)", ascending=False)
+st.dataframe(voyage_df_sorted)
+
+best_vessel = voyage_df_sorted.iloc[0]["Vessel"]
+st.success(f"🚢 Recommended Vessel for this Voyage: {best_vessel}")
 with st.spinner("Calculating breakevens based on realistic speed curves..."):
     spot_decisions = []
     breakevens = []
