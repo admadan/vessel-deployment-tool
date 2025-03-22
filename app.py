@@ -20,7 +20,7 @@ assumed_speed = st.sidebar.number_input("Speed (knots)", value=11.0, step=0.1)
 sea_margin = st.sidebar.number_input("Sea Margin (%)", value=0.05, step=0.01)
 assumed_laden_days = st.sidebar.number_input("Laden Days Fraction", value=0.4, step=0.01)
 demand_billion_ton_mile = st.sidebar.number_input("Demand (Bn Ton Mile)", value=10396.0, step=10.0)
-auto_tightness = st.sidebar.checkbox("Auto-calculate market tightness", value=True)
+auto_tightness = st.sidebar.checkbox("Auto-calculate market tightness", value=True, help="Formula: Tightness = min(max(0.3 + (Equilibrium / Demand), 0), 1). Higher tightness indicates a tighter market with more demand than supply.")
 
 # Tightness calculation
 dwt_utilization = (fleet_size_dwt_supply_in_dwt_million * 1_000_000 / fleet_size_number_supply) * utilization_constant
