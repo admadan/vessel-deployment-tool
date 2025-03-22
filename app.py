@@ -135,4 +135,34 @@ with st.spinner("Calculating breakevens based on realistic speed curves..."):
         if carbon_calc_method == "Boil Off Rate":
             adjusted_fuel = vessel["Boil_Off_Rate_percent"] * vessel["Capacity_CBM"] / 1000
 
-        auto_co
+        auto_co2 = adjusted_fuel * 3.114
+        carbon_cost = auto_co2 * ets_price
+        fuel_cost = adjusted_fuel * lng_bunker_price
+        margin_cost = vessel["Margin"]
+        breakeven = fuel_cost + carbon_cost + margin_cost
+
+        breakevens.append({
+            "Vessel_ID": vessel["Vessel_ID"],
+            "Vessel": vessel["Name"],
+            "Fuel Cost ($/day)": f"{fuel_cost:,.1f}",
+            "Carbon Cost ($/day)": f"{carbon_cost:,.1f}",
+            "Margin ($/day)": f"{margin_cost:,.1f}",
+            "Breakeven Spot ($/day)": f"{breakeven:,.1f}"
+        })
+
+        total_co2_emissions.append(f"{auto_co2:,.1f}")
+
+        if base_spot_rate > breakeven:
+            spot_decisions.append("✅ Spot Recommended")
+        else:
+            spot_decisions.append("❌ TC/Idle Preferred")
+
+    results_df = pd.DataFrame(breakevens)
+    results_df["Total CO₂ (t/day)"] = total_co2_emissions
+    results_df["Decision"] = spot_decisions
+
+    st.dataframe(
+        results_df.style.set_properties(**{'text-align': 'center'}).set_table_styles([
+            {'selector': 'th', 'props': [('text-align', 'center')]}
+        ])
+    )
