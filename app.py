@@ -15,13 +15,13 @@ lng_bunker_price = st.sidebar.slider("LNG Bunker Price ($/ton)", 600, 1000, 730)
 st.sidebar.header("💡 Freight Market Inputs")
 auto_tightness = st.sidebar.checkbox("Auto-calculate market tightness", value=True)
 
-fleet_size_number_supply = st.sidebar.number_input("Fleet Size (Number of Ships)", value=3131, step=1, format="%d")
-fleet_size_dwt_supply_in_dwt_million = st.sidebar.number_input("Fleet Size Supply (Million DWT)", value=254.1, step=0.1)
-utilization_constant = st.sidebar.number_input("Utilization Constant", value=0.95, step=0.01)
-assumed_speed = st.sidebar.number_input("Assumed Speed (knots)", value=11.0, step=0.1)
-sea_margin = st.sidebar.number_input("Sea Margin", value=0.05, step=0.01)
-assumed_laden_days = st.sidebar.number_input("Assumed Laden Days Fraction", value=0.4, step=0.01)
-demand_billion_ton_mile = st.sidebar.number_input("Demand (Billion Ton Mile)", value=10396.0, step=10.0)
+fleet_size_number_supply = st.sidebar.number_input("Fleet Size (# of Ships)", value=3131, step=1, format="%d")
+fleet_size_dwt_supply_in_dwt_million = st.sidebar.number_input("Supply (M DWT)", value=254.1, step=0.1)
+utilization_constant = st.sidebar.number_input("Utilization Factor", value=0.95, step=0.01)
+assumed_speed = st.sidebar.number_input("Speed (knots)", value=11.0, step=0.1)
+sea_margin = st.sidebar.number_input("Sea Margin (%)", value=0.05, step=0.01)
+assumed_laden_days = st.sidebar.number_input("Laden Days Fraction", value=0.4, step=0.01)
+demand_billion_ton_mile = st.sidebar.number_input("Demand (Bn Ton Mile)", value=10396.0, step=10.0)
 
 # Tightness calculation
 dwt_utilization = (fleet_size_dwt_supply_in_dwt_million * 1_000_000 / fleet_size_number_supply) * utilization_constant
@@ -33,12 +33,12 @@ equilibrium = demand_billion_ton_mile - maximum_supply_billion_ton_mile
 if auto_tightness:
     market_tightness = min(max(0.3 + (equilibrium / demand_billion_ton_mile), 0.0), 1.0)
 else:
-    market_tightness = st.sidebar.slider("Manual Market Tightness (0-1)", 0.0, 1.0, 0.5)
+    market_tightness = st.sidebar.slider("Manual Tightness (0-1)", 0.0, 1.0, 0.5)
 
-st.sidebar.markdown(f"**Market Tightness (0-1):** {market_tightness:.2f}")
+st.sidebar.markdown(f"**Tightness:** {market_tightness:.2f}")
 
-base_spot_rate = st.sidebar.slider("Current Spot Rate (USD/day)", 5000, 150000, 60000, step=1000)
-base_tc_rate = st.sidebar.slider("Current TC Rate (USD/day)", 5000, 140000, 50000, step=1000)
+base_spot_rate = st.sidebar.slider("Spot Rate (USD/day)", 5000, 150000, 60000, step=1000)
+base_tc_rate = st.sidebar.slider("TC Rate (USD/day)", 5000, 140000, 50000, step=1000)
 
 # ----------------------- MAIN PANEL -----------------------
 st.title("LNG Fleet Deployment Simulator")
@@ -60,18 +60,15 @@ vessel_data = pd.DataFrame({
     "Margin": [2000] * 10
 })
 
+cols = st.columns(2)
 for idx, row in vessel_data.iterrows():
-    with st.expander(f"{row['Name']}"):
-        col1, col2 = st.columns(2)
-        with col1:
-            vessel_data.at[idx, "Main_Engine_Consumption_MT_per_day"] = st.number_input(f"Main Engine Consumption (tons/day) - {row['Name']}", value=row["Main_Engine_Consumption_MT_per_day"], key=f"me_{idx}")
-        with col2:
-            vessel_data.at[idx, "Generator_Consumption_MT_per_day"] = st.number_input(f"Generator Consumption (tons/day) - {row['Name']}", value=row["Generator_Consumption_MT_per_day"], key=f"gen_{idx}")
+    with cols[idx % 2].expander(f"{row['Name']}"):
+        vessel_data.at[idx, "Main_Engine_Consumption_MT_per_day"] = st.number_input("Main Engine (tons/day)", value=row["Main_Engine_Consumption_MT_per_day"], key=f"me_{idx}")
+        vessel_data.at[idx, "Generator_Consumption_MT_per_day"] = st.number_input("Generator (tons/day)", value=row["Generator_Consumption_MT_per_day"], key=f"gen_{idx}")
 
-        show_more = st.toggle("Show More Details", key=f"toggle_{idx}")
-        if show_more:
-            vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input(f"Boil Off Rate (%/day) - {row['Name']}", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}")
-            vessel_data.at[idx, "Margin"] = st.number_input(f"Margin (USD/day) - {row['Name']}", value=row["Margin"], key=f"margin_{idx}")
+        if st.toggle("More Details", key=f"toggle_{idx}"):
+            vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input("Boil Off Rate (%)", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}")
+            vessel_data.at[idx, "Margin"] = st.number_input("Margin (USD/day)", value=row["Margin"], key=f"margin_{idx}")
 
 # ----------------------- Simulation Section -----------------------
 st.header("2️⃣ Simulation Results")
