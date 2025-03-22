@@ -52,6 +52,8 @@ base_spot_rate = st.sidebar.slider("Spot Rate (USD/day)", 5000, 150000, get_valu
 base_tc_rate = st.sidebar.slider("TC Rate (USD/day)", 5000, 140000, get_value("base_tc_rate", 50000), step=1000)
 carbon_calc_method = st.sidebar.radio("Carbon Cost Based On", ["Main Engine Consumption", "Boil Off Rate"], index=["Main Engine Consumption", "Boil Off Rate"].index(get_value("carbon_calc_method", "Main Engine Consumption")))
 
+
+
 # ----------------------- MAIN PANEL -----------------------
 st.title("LNG Fleet Deployment Simulator")
 
@@ -140,6 +142,12 @@ for idx, row in vessel_data.iterrows():
                 with c2:
                     vessel_data.at[idx, "CII_Rating"] = st.selectbox("CII Rating", options=["A", "B", "C", "D", "E"], index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]), key=f"cii_{idx}")
                     vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (%)", value=row["FuelEU_GHG_Compliance"], key=f"ghg_{idx}")
+
+st.markdown("**ℹ️ Spot/TC Recommendation Logic:** The model compares each vessel's breakeven with the Spot Rate. If Spot > Breakeven, Spot is recommended. Otherwise, TC or Idle is preferred.")
+
+
+
+
 
 # Deployment Simulation Section
 st.header("Deployment Simulation Results")
