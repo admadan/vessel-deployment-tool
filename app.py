@@ -71,6 +71,18 @@ vessel_data = pd.DataFrame({
     "Margin": [2000] * 10
 })
 
+# Save/Load Section
+with st.expander("💾 Save or Load Simulation"):
+    if st.button("Save Current Simulation"):
+        st.download_button("Download JSON", data=vessel_data.to_json(orient='records'), file_name=f"{scenario_name}_simulation.json")
+
+    uploaded_file = st.file_uploader("Upload Previous Simulation", type="json")
+    if uploaded_file is not None:
+        uploaded_data = pd.read_json(uploaded_file)
+        if not uploaded_data.empty:
+            vessel_data.update(uploaded_data)
+            st.success("Simulation loaded successfully!")
+
 cols = st.columns(2)
 for idx, row in vessel_data.iterrows():
     with cols[idx % 2].expander(f"🚢 {row['Name']}"):
