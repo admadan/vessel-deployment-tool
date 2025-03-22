@@ -96,8 +96,11 @@ for idx, row in vessel_data.iterrows():
                 st.markdown("---")
                 st.caption("Speed & Consumption Curve (auto-adjusted to Freight Market speed input)")
 
-                # Dropdown to select other vessel for comparison
-                compare_vessel = st.selectbox("Compare with another vessel", [v for i, v in enumerate(vessel_data['Name']) if i != idx], key=f"compare_{idx}")
+                # Toggle for comparison
+                compare_toggle = st.checkbox("Compare with another vessel", key=f"compare_toggle_{idx}")
+
+                if compare_toggle:
+                compare_vessel = st.selectbox("Select vessel to compare", [v for i, v in enumerate(vessel_data['Name']) if i != idx], key=f"compare_{idx}") if i != idx], key=f"compare_{idx}")
                 min_speed = max(8, assumed_speed - 3)
                 max_speed = min(20, assumed_speed + 3)
                 speed_range = list(range(int(min_speed), int(max_speed) + 1))
