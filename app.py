@@ -53,7 +53,6 @@ base_tc_rate = st.sidebar.slider("TC Rate (USD/day)", 5000, 140000, get_value("b
 carbon_calc_method = st.sidebar.radio("Carbon Cost Based On", ["Main Engine Consumption", "Boil Off Rate"], index=["Main Engine Consumption", "Boil Off Rate"].index(get_value("carbon_calc_method", "Main Engine Consumption")))
 
 
-
 # ----------------------- MAIN PANEL -----------------------
 st.title("LNG Fleet Deployment Simulator")
 
@@ -69,13 +68,7 @@ vessel_data = pd.DataFrame({
     "Beam_m": [46] * 10,
     "Draft_m": [11.5] * 10,
     "Capacity_CBM": [160000] * 10,
-    "FuelEU_GHG_Compliance": [65, 65, 65, 80, 80, 80, 95, 95, 95, 95],
-    "CII_Rating": ["A", "A", "A", "B", "B", "B", "C", "C", "C", "C"],
-    "Main_Engine_Consumption_MT_per_day": [70, 72, 74, 85, 88, 90, 100, 102, 105, 107],
-    "Generator_Consumption_MT_per_day": [5, 5, 5, 6, 6, 6, 7, 7, 7, 7],
-    "Boil_Off_Rate_percent": [0.08, 0.08, 0.08, 0.09, 0.09, 0.09, 0.07, 0.07, 0.07, 0.07],
-    "Margin": [2000] * 10
-})
+    "FuelEU_GHG_Compliance (gCO₂eq/MJ)
 
 # Save/Load Section
 scenario_config = {
@@ -147,11 +140,9 @@ for idx, row in vessel_data.iterrows():
                     vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input("Boil Off Rate (%)", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}")
                 with c2:
                     vessel_data.at[idx, "CII_Rating"] = st.selectbox("CII Rating", options=["A", "B", "C", "D", "E"], index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]), key=f"cii_{idx}")
-                    vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (%)", value=row["FuelEU_GHG_Compliance"], key=f"ghg_{idx}")
+                    vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (gCO₂eq/MJ)", value=row["FuelEU_GHG_Compliance"], key=f"ghg_{idx}", help="Measured as grams of CO₂ equivalent per megajoule of energy. Typical range is 50-100 gCO₂eq/MJ for LNG carriers.")")", value=row["FuelEU_GHG_Compliance"], key=f"ghg_{idx}")
 
 st.markdown("**ℹ️ Spot/TC Recommendation Logic:** The model compares each vessel's breakeven with the Spot Rate. If Spot > Breakeven, Spot is recommended. Otherwise, TC or Idle is preferred.")
-
-
 
 
 
@@ -191,8 +182,6 @@ with st.spinner("Calculating breakevens..."):
     st.dataframe(df_result.style.set_properties(**{'text-align': 'center'}).set_table_styles([
         {'selector': 'th', 'props': [('text-align', 'center')]}
     ]))
-
-
 
 
 
