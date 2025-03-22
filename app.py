@@ -43,8 +43,8 @@ with st.sidebar.expander("🔍 Market Calculations"):
     st.markdown(f"**Market Condition:** <span style='color:{status_color}'>{market_status}</span>", unsafe_allow_html=True)
     st.markdown(f"**Tightness:** {market_tightness:.2f}")
 
-base_spot_rate = st.sidebar.slider("Spot Rate (USD/day)", 5000, 150000, 60000, step=1000)
-base_tc_rate = st.sidebar.slider("TC Rate (USD/day)", 5000, 140000, 50000, step=1000)
+base_spot_rate = st.sidebar.slider("Spot Rate (USD/day)", help="Current Spot Freight Rate in USD per day for LNG carriers.", 5000, 150000, 60000, step=1000)
+base_tc_rate = st.sidebar.slider("TC Rate (USD/day)", help="Current Time Charter Rate in USD per day for LNG carriers.", 5000, 140000, 50000, step=1000)
 
 # ----------------------- MAIN PANEL -----------------------
 st.title("LNG Fleet Deployment Simulator")
@@ -69,14 +69,14 @@ vessel_data = pd.DataFrame({
 cols = st.columns(2)
 for idx, row in vessel_data.iterrows():
     with cols[idx % 2].expander(f"{row['Name']}"):
-        vessel_data.at[idx, "Main_Engine_Consumption_MT_per_day"] = st.number_input("Main Engine (tons/day)", value=row["Main_Engine_Consumption_MT_per_day"], key=f"me_{idx}")
-        vessel_data.at[idx, "Generator_Consumption_MT_per_day"] = st.number_input("Generator (tons/day)", value=row["Generator_Consumption_MT_per_day"], key=f"gen_{idx}")
+        vessel_data.at[idx, "Main_Engine_Consumption_MT_per_day"] = st.number_input("Main Engine (tons/day)", help="Main engine fuel consumption per day at average operating speed.", value=row["Main_Engine_Consumption_MT_per_day"], key=f"me_{idx}")
+        vessel_data.at[idx, "Generator_Consumption_MT_per_day"] = st.number_input("Generator (tons/day)", help="Auxiliary generator fuel consumption per day.", value=row["Generator_Consumption_MT_per_day"], key=f"gen_{idx}")
 
         if st.toggle("More Details", key=f"toggle_{idx}"):
-            vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input("Boil Off Rate (%)", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}")
-            vessel_data.at[idx, "Margin"] = st.number_input("Margin (USD/day)", value=row["Margin"], key=f"margin_{idx}")
-            vessel_data.at[idx, "CII_Rating"] = st.selectbox("CII Rating", options=["A", "B", "C", "D", "E"], index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]), key=f"cii_{idx}")
-            vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (%)", value=row["FuelEU_GHG_Compliance"], key=f"ghg_{idx}")
+            vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input("Boil Off Rate (%)", help="Daily boil-off rate as a percentage of cargo lost as vapor.", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}")
+            vessel_data.at[idx, "Margin"] = st.number_input("Margin (USD/day)", help="User-defined margin to account for overheads or additional costs.", value=row["Margin"], key=f"margin_{idx}")
+            vessel_data.at[idx, "CII_Rating"] = st.selectbox("CII Rating", help="Annual Carbon Intensity Indicator (CII) grade as per IMO regulations.", options=["A", "B", "C", "D", "E"], index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]), key=f"cii_{idx}")
+            vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (%)", help="FuelEU Maritime GHG compliance percentage for this vessel.", value=row["FuelEU_GHG_Compliance"], key=f"ghg_{idx}")
 
 # ----------------------- Simulation Section -----------------------
 with st.spinner("Applying changes..."):
