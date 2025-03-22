@@ -115,7 +115,7 @@ for idx, row in vessel_data.iterrows():
                     compare_ref_consumption = compare_row["Main_Engine_Consumption_MT_per_day"] + compare_row["Generator_Consumption_MT_per_day"]
                     compare_total_consumption = [compare_ref_consumption * (speed / base_speed) ** 3 for speed in speed_range]
                     df_curve[compare_vessel] = compare_total_consumption
-                    df_curve.rename(columns={"Total Consumption (tons/day)": row["Name"]}, inplace=True)": row["Name"]}, inplace=True)
+                    df_curve.rename(columns={"Total Consumption (tons/day)": row["Name"]}, inplace=True)
                 st.line_chart(df_curve)
 
 # ----------------------- Simulation Section -----------------------
