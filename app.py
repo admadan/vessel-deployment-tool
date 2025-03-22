@@ -14,6 +14,26 @@ base_spot_rate = st.sidebar.slider("Base Spot Rate (USD/day)", 40000, 120000, 60
 demand_level = st.sidebar.slider("Market Tightness (Demand)", 50, 200, 100)
 lng_bunker_price = st.sidebar.slider("LNG Bunker Price ($/ton)", 600, 1000, 730)
 
+# ----------------------- GLOBAL MARKET CALCULATIONS -----------------------
+st.sidebar.title("🌍 Market Balance Inputs")
+fleet_size_number_supply = st.sidebar.number_input("Fleet Size (Number of Ships)", value=3131, step=1, format="%d")
+fleet_size_dwt_supply_in_dwt_million = st.sidebar.number_input("Fleet Size Supply (Million DWT)", value=254.1, step=0.1)
+utilization_constant = st.sidebar.number_input("Utilization Constant", value=0.95, step=0.01)
+assumed_speed = st.sidebar.number_input("Assumed Speed (knots)", value=11.0, step=0.1)
+sea_margin = st.sidebar.number_input("Sea Margin", value=0.05, step=0.01)
+assumed_laden_days = st.sidebar.number_input("Assumed Laden Days Fraction", value=0.4, step=0.01)
+demand_billion_ton_mile = st.sidebar.number_input("Demand (Billion Ton Mile)", value=10396.0, step=10.0)
+
+dwt_utilization = (fleet_size_dwt_supply_in_dwt_million * 1_000_000 / fleet_size_number_supply) * utilization_constant
+distance_travelled_per_day = assumed_speed * 24 * (1 - sea_margin)
+productive_laden_days_per_year = assumed_laden_days * 365
+maximum_supply_billion_ton_mile = fleet_size_number_supply * dwt_utilization * distance_travelled_per_day * productive_laden_days_per_year / 1_000_000_000
+equilibrium = demand_billion_ton_mile - maximum_supply_billion_ton_mile
+result = "Excess Supply" if equilibrium < 0 else "Excess Demand"
+
+st.sidebar.markdown(f"**Balance Result:** {result}")
+st.sidebar.markdown(f"**Supply-Demand Delta:** {equilibrium:,.2f} Billion Ton Miles")
+
 st.title("LNG Deployment Simulator for 10 Vessels")
 st.header("1️⃣ Vessel Performance Inputs")
 
@@ -35,7 +55,7 @@ for i in range(10):
         margin = st.number_input(f"Maintenance Margin (USD/day) - Vessel {i+1}", value=default_data[i]["margin"])
 
         total_fuel = fuel + aux
-        auto_co2 = total_fuel * 3.114
+        auto_co2 = total_fuel * 3.17
 
         st.info(f"Auto-calculated CO₂ Emissions: {auto_co2:.2f} tons/day")
 
