@@ -58,22 +58,33 @@ required_ghg_target = st.sidebar.number_input("FuelEU Required GHG Compliance (%
 # ----------------------- MAIN PANEL -----------------------
 st.title("LNG Fleet Deployment Simulator")
 
-# Vessel input section
-st.header("Vessel Profile Input")
-vessel_data = pd.DataFrame({
-    "Vessel_ID": range(1, 11),
-    "Name": [f"LNG Carrier {chr(65 + i)}" for i in range(10)],
-    "Length_m": [295] * 10,
-    "Beam_m": [46] * 10,
-    "Draft_m": [11.5] * 10,
-    "Capacity_CBM": [160000] * 10,
-    "FuelEU_GHG_Compliance": [65, 65, 65, 80, 80, 80, 95, 95, 95, 95],
-    "CII_Rating": ["A", "A", "A", "B", "B", "B", "C", "C", "C", "C"],
-    "Main_Engine_Consumption_MT_per_day": [70, 72, 74, 85, 88, 90, 100, 102, 105, 107],
-    "Generator_Consumption_MT_per_day": [5, 5, 5, 6, 6, 6, 7, 7, 7, 7],
-    "Boil_Off_Rate_percent": [0.08, 0.08, 0.08, 0.09, 0.09, 0.09, 0.07, 0.07, 0.07, 0.07],
-    "Margin": [2000] * 10
-})
+# Save/Load Scenario Section
+with st.expander("💾 Save or Load Simulation"):
+    scenario_config = {
+        'scenario_name': scenario_name,
+        'ets_price': ets_price,
+        'lng_bunker_price': lng_bunker_price,
+        'fueleu_penalty_per_ton': fueleu_penalty_per_ton,
+        'required_ghg_target': required_ghg_target,
+        'fleet_size_number_supply': fleet_size_number_supply,
+        'fleet_size_dwt_supply_in_dwt_million': fleet_size_dwt_supply_in_dwt_million,
+        'utilization_constant': utilization_constant,
+        'assumed_speed': assumed_speed,
+        'sea_margin': sea_margin,
+        'assumed_laden_days': assumed_laden_days,
+        'demand_billion_ton_mile': demand_billion_ton_mile,
+        'auto_tightness': auto_tightness,
+        'base_spot_rate': base_spot_rate,
+        'base_tc_rate': base_tc_rate,
+        'carbon_calc_method': carbon_calc_method
+    }
+    if st.button("Save Current Scenario"):
+        st.download_button("Download JSON", data=json.dumps(scenario_config), file_name=f"{scenario_name}_scenario.json")
+    uploaded_file = st.file_uploader("Upload Previous Scenario", type="json")
+    if uploaded_file is not None:
+        loaded_config = json.load(uploaded_file)
+        st.session_state.loaded_data = loaded_config
+        st.success("Scenario loaded successfully!")
 
 # Deployment Simulation Section
 st.header("Deployment Simulation Results")
