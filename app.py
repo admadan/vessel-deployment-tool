@@ -95,7 +95,16 @@ for idx, row in vessel_data.iterrows():
             vessel_data.at[idx, "CII_Rating"] = st.selectbox("CII Rating", options=["A", "B", "C", "D", "E"], index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]), key=f"cii_{idx}")
             vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (gCO2e/MJ)", value=row["FuelEU_GHG_Compliance"], key=f"ghg_{idx}")
 
+# ----------------------- Compliance Section -----------------------
+st.subheader("🌱 Regulatory Compliance Settings")
+col1, col2 = st.columns(2)
+with col1:
+    required_ghg_intensity = st.number_input("Required GHG Intensity (gCO2e/MJ)", value=20)
+    st.caption("Regulatory minimum GHG intensity for vessels to comply with FuelEU or other regional rules.")
 
+with col2:
+    penalty_per_excess_unit = st.number_input("Penalty per gCO2e/MJ Over Limit ($/day)", value=1000)
+    st.caption("Penalty applied for each gCO2e/MJ above the required GHG intensity limit.")
 
 # ----------------------- Chartering Sensitivity -----------------------
 st.subheader("📈 Chartering Sensitivity")
@@ -215,13 +224,4 @@ with col2:
         vessel_data = pd.DataFrame(loaded_config['vessel_data'])
         st.session_state.loaded_data = loaded_config
         st.success("Scenario loaded successfully!")
-# ----------------------- Compliance Section -----------------------
-st.subheader("🌱 Regulatory Compliance Settings")
-col1, col2 = st.columns(2)
-with col1:
-    required_ghg_intensity = st.number_input("Required GHG Intensity (gCO2e/MJ)", value=20)
-    st.caption("Regulatory minimum GHG intensity for vessels to comply with FuelEU or other regional rules.")
 
-with col2:
-    penalty_per_excess_unit = st.number_input("Penalty per gCO2e/MJ Over Limit ($/day)", value=1000)
-    st.caption("Penalty applied for each gCO2e/MJ above the required GHG intensity limit.")
