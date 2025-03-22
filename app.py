@@ -14,6 +14,22 @@ lng_bunker_price = st.sidebar.slider("LNG Bunker Price ($/ton)", 600, 1000, 730)
 
 st.sidebar.header("💡 Freight Market Inputs")
 
+fleet_size_number_supply = st.sidebar.number_input("Fleet Size (# of Ships)", value=3131, step=1, format="%d")
+fleet_size_dwt_supply_in_dwt_million = st.sidebar.number_input("Supply (M DWT)", value=254.1, step=0.1)
+utilization_constant = st.sidebar.number_input("Utilization Factor", value=0.95, step=0.01)
+assumed_speed = st.sidebar.number_input("Speed (knots)", value=11.0, step=0.1)
+sea_margin = st.sidebar.number_input("Sea Margin (%)", value=0.05, step=0.01)
+assumed_laden_days = st.sidebar.number_input("Laden Days Fraction", value=0.4, step=0.01)
+demand_billion_ton_mile = st.sidebar.number_input("Demand (Bn Ton Mile)", value=10396.0, step=10.0)
+auto_tightness = st.sidebar.checkbox("Auto-calculate market tightness", value=True)
+
+# Tightness calculation
+dwt_utilization = (fleet_size_dwt_supply_in_dwt_million * 1_000_000 / fleet_size_number_supply) * utilization_constant
+distance_travelled_per_day = assumed_speed * 24 * (1 - sea_margin)
+productive_laden_days_per_year = assumed_laden_days * 365
+maximum_supply_billion_ton_mile = fleet_size_number_supply * dwt_utilization * distance_travelled_per_day * productive_laden_days_per_year / 1_000_000_000
+equilibrium = demand_billion_ton_mile - maximum_supply_billion_ton_mile
+
 st.sidebar.markdown(f"**DWT Utilization:** {dwt_utilization:,.1f} MT")
 st.sidebar.markdown(f"**Max Supply:** {maximum_supply_billion_ton_mile:,.1f} Bn Ton Mile")
 st.sidebar.markdown(f"**Equilibrium:** {equilibrium:,.1f} Bn Ton Mile")
