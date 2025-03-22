@@ -53,9 +53,12 @@ base_tc_rate = st.sidebar.slider("TC Rate (USD/day)", 5000, 140000, get_value("b
 carbon_calc_method = st.sidebar.radio("Carbon Cost Based On", ["Main Engine Consumption", "Boil Off Rate"], index=["Main Engine Consumption", "Boil Off Rate"].index(get_value("carbon_calc_method", "Main Engine Consumption")))
 
 
-
 # ----------------------- MAIN PANEL -----------------------
 st.title("LNG Fleet Deployment Simulator")
+
+# FuelEU Maritime penalty input
+fueleu_penalty_per_ton = st.sidebar.number_input("FuelEU Penalty (€/t CO₂eq shortfall)", min_value=0, value=240)
+required_ghg_target = st.sidebar.number_input("FuelEU Required GHG Compliance (%)", min_value=0, max_value=100, value=80)
 
 # Vessel Data
 vessel_data = pd.DataFrame({
@@ -78,6 +81,8 @@ scenario_config = {
     'scenario_name': scenario_name,
     'ets_price': ets_price,
     'lng_bunker_price': lng_bunker_price,
+    'fueleu_penalty_per_ton': fueleu_penalty_per_ton,
+    'required_ghg_target': required_ghg_target,
     'fleet_size_number_supply': fleet_size_number_supply,
     'fleet_size_dwt_supply_in_dwt_million': fleet_size_dwt_supply_in_dwt_million,
     'utilization_constant': utilization_constant,
