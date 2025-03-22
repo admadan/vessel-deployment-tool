@@ -93,7 +93,16 @@ for idx, row in vessel_data.iterrows():
                     row["Main_Engine_Consumption_MT_per_day"] + row["Generator_Consumption_MT_per_day"] * (speed / 17)  # simple scale example
                     for speed in sc_speeds
                 ]
-                st.line_chart({"Speed (knots)": sc_speeds, "Total Consumption (tons/day)": total_consumption})
+                import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+ax.plot(sc_speeds, total_consumption, marker='o', linestyle='-')
+ax.set_xlim(0, 25)
+ax.set_ylim(0, 150)
+ax.set_xlabel('Speed (knots)')
+ax.set_ylabel('Total Consumption (tons/day)')
+ax.set_title('Speed & Consumption Curve')
+ax.grid(True)
+st.pyplot(fig)
 
 # Scenario Save/Load
 with st.sidebar.expander("💾 Save/Load Scenario"):
