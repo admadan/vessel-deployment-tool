@@ -95,79 +95,10 @@ for idx, row in vessel_data.iterrows():
                     vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (%)", value=row["FuelEU_GHG_Compliance"], key=f"ghg_{idx}")
                 st.markdown("---")
                 st.caption("Speed & Consumption Curve (auto-adjusted to Freight Market speed input)")
-                speed_range = [assumed_speed - 3, assumed_speed - 2, assumed_speed - 1, assumed_speed, assumed_speed + 1, assumed_speed + 2, assumed_speed + 3]
+                min_speed = max(8, assumed_speed - 3)
+                max_speed = min(20, assumed_speed + 3)
+                speed_range = list(range(int(min_speed), int(max_speed) + 1))
                 base_speed = assumed_speed
                 ref_total_consumption = row["Main_Engine_Consumption_MT_per_day"] + row["Generator_Consumption_MT_per_day"]
                 total_consumption = [ref_total_consumption * (speed / base_speed) ** 3 for speed in speed_range]
                 st.line_chart({"Speed (knots)": speed_range, "Total Consumption (tons/day)": total_consumption})
-
-# Scenario Save/Load Section
-with st.sidebar.expander("💾 Save/Load Scenario"):
-    scenario_inputs = {
-        "scenario_name": scenario_name,
-        "ets_price": ets_price,
-        "lng_bunker_price": lng_bunker_price,
-        "fleet_size_number_supply": fleet_size_number_supply,
-        "fleet_size_dwt_supply_in_dwt_million": fleet_size_dwt_supply_in_dwt_million,
-        "utilization_constant": utilization_constant,
-        "assumed_speed": assumed_speed,
-        "sea_margin": sea_margin,
-        "assumed_laden_days": assumed_laden_days,
-        "demand_billion_ton_mile": demand_billion_ton_mile,
-        "auto_tightness": auto_tightness,
-        "base_spot_rate": base_spot_rate,
-        "base_tc_rate": base_tc_rate,
-        "carbon_calc_method": carbon_calc_method,
-        "vessel_data": vessel_data.to_dict()
-    }
-
-    st.download_button(
-        label="📥 Download Scenario JSON",
-        data=json.dumps(scenario_inputs, indent=4),
-        file_name=f"{scenario_name.replace(' ', '_')}.json",
-        mime="application/json"
-    )
-
-    uploaded_file = st.file_uploader("📤 Upload Scenario", type=["json"])
-    if uploaded_file:
-        st.session_state.loaded_data = json.load(uploaded_file)
-        st.experimental_rerun()
-
-# ----------------------- Simulation Section -----------------------
-st.header("Deployment Simulation Results")
-with st.spinner("Calculating breakevens based on realistic speed curves..."):
-    spot_decisions = []
-    breakevens = []
-    total_co2_emissions = []
-    base_speed = assumed_speed
-    for index, vessel in vessel_data.iterrows():
-        ref_total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
-        adjusted_fuel = ref_total_fuel * (assumed_speed / base_speed) ** 3
-        if carbon_calc_method == "Boil Off Rate":
-            adjusted_fuel = vessel["Boil_Off_Rate_percent"] * vessel["Capacity_CBM"] / 1000
-        auto_co2 = adjusted_fuel * 3.114
-        carbon_cost = auto_co2 * ets_price
-        fuel_cost = adjusted_fuel * lng_bunker_price
-        margin_cost = vessel["Margin"]
-        breakeven = fuel_cost + carbon_cost + margin_cost
-        breakevens.append({
-            "Vessel_ID": vessel["Vessel_ID"],
-            "Vessel": vessel["Name"],
-            "Fuel Cost ($/day)": f"{fuel_cost:,.1f}",
-            "Carbon Cost ($/day)": f"{carbon_cost:,.1f}",
-            "Margin ($/day)": f"{margin_cost:,.1f}",
-            "Breakeven Spot ($/day)": f"{breakeven:,.1f}"
-        })
-        total_co2_emissions.append(f"{auto_co2:,.1f}")
-        if base_spot_rate > breakeven:
-            spot_decisions.append("✅ Spot Recommended")
-        else:
-            spot_decisions.append("❌ TC/Idle Preferred")
-    results_df = pd.DataFrame(breakevens)
-    results_df["Total CO₂ (t/day)"] = total_co2_emissions
-    results_df["Decision"] = spot_decisions
-    st.dataframe(
-        results_df.style.set_properties(**{'text-align': 'center'}).set_table_styles([
-            {'selector': 'th', 'props': [('text-align', 'center')]}
-        ])
-    )
