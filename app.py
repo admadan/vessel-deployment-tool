@@ -69,58 +69,8 @@ for idx, row in vessel_data.iterrows():
         if st.toggle("More Details", key=f"toggle_{idx}"):
             vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input("Boil Off Rate (%)", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}")
             vessel_data.at[idx, "Margin"] = st.number_input("Margin (USD/day)", value=row["Margin"], key=f"margin_{idx}")
+            vessel_data.at[idx, "CII_Rating"] = st.selectbox("CII Rating", options=["A", "B", "C", "D", "E"], index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]), key=f"cii_{idx}")
+            vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (%)", value=row["FuelEU_GHG_Compliance"], key=f"ghg_{idx}")
 
 # ----------------------- Simulation Section -----------------------
-st.header("2️⃣ Simulation Results")
-
-spot_decisions = []
-breakevens = []
-total_co2_emissions = []
-
-for index, vessel in vessel_data.iterrows():
-    total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
-    auto_co2 = total_fuel * 3.114
-    carbon_cost = auto_co2 * ets_price
-    fuel_cost = total_fuel * lng_bunker_price
-    margin_cost = vessel["Margin"]
-    breakeven = fuel_cost + carbon_cost + margin_cost
-
-    breakevens.append({
-        "Vessel_ID": vessel["Vessel_ID"],
-        "Vessel": vessel["Name"],
-        "Fuel Cost": fuel_cost,
-        "Carbon Cost": carbon_cost,
-        "Margin": margin_cost,
-        "Breakeven Spot (USD/day)": breakeven
-    })
-
-    total_co2_emissions.append(auto_co2)
-
-    if base_spot_rate > breakeven:
-        spot_decisions.append("✅ Spot Recommended")
-    else:
-        spot_decisions.append("❌ TC/Idle Preferred")
-
-results_df = pd.DataFrame(breakevens)
-results_df["Decision"] = spot_decisions
-results_df["Total CO₂ (t/day)"] = total_co2_emissions
-
-st.dataframe(results_df)
-
-# ----------------------- Save / Load Scenarios -----------------------
-if "saved_scenarios" not in st.session_state:
-    st.session_state["saved_scenarios"] = {}
-
-if st.button("💾 Save Scenario"):
-    st.session_state["saved_scenarios"][scenario_name] = vessel_data.to_dict()
-    st.success(f"Scenario '{scenario_name}' saved.")
-
-if st.session_state["saved_scenarios"]:
-    st.subheader("Saved Scenarios")
-    for key in st.session_state["saved_scenarios"]:
-        st.text(f"- {key}")
-
-# ----------------------- Market Balance Feedback -----------------------
-st.subheader("🌍 Market Equilibrium Result")
-result_label = "**Excess Supply**" if equilibrium < 0 else "**Excess Demand**"
-st.markdown(f"Result: {result_label}  |  **Δ:** {equilibrium:,.2f} Billion Ton Miles")
+...
