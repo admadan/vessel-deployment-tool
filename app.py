@@ -105,8 +105,22 @@ for idx, row in vessel_data.iterrows():
                 total_consumption = [
                     row["Main_Engine_Consumption_MT_per_day"] + row["Generator_Consumption_MT_per_day"] * (speed / 17) for speed in sc_speeds
                 ]
-                fig = plot_sc_curve(sc_speeds, total_consumption)
-                st.pyplot(fig)
+                me_consumption = [row["Main_Engine_Consumption_MT_per_day"] * (speed / 17) for speed in sc_speeds]
+gen_consumption = [row["Generator_Consumption_MT_per_day"] * (speed / 17) for speed in sc_speeds]
+total_consumption = [me + gen for me, gen in zip(me_consumption, gen_consumption)]
+
+fig, ax = plt.subplots()
+ax.plot(sc_speeds, total_consumption, marker='o', label='Total Consumption')
+ax.plot(sc_speeds, me_consumption, marker='x', linestyle='--', label='Main Engine')
+ax.plot(sc_speeds, gen_consumption, marker='s', linestyle='--', label='Generator')
+ax.set_xlim(0, 25)
+ax.set_ylim(0, 150)
+ax.set_xlabel('Speed (knots)')
+ax.set_ylabel('Consumption (tons/day)')
+ax.set_title('Speed & Consumption Breakdown')
+ax.legend()
+ax.grid(True)
+st.pyplot(fig)
 
 # Scenario Save/Load
 with st.sidebar.expander("💾 Save/Load Scenario"):
