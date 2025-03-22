@@ -68,7 +68,8 @@ for idx, row in vessel_data.iterrows():
         with col2:
             vessel_data.at[idx, "Generator_Consumption_MT_per_day"] = st.number_input(f"Generator Consumption (tons/day) - {row['Name']}", value=row["Generator_Consumption_MT_per_day"], key=f"gen_{idx}")
 
-        with st.expander("More Details"):
+        show_more = st.toggle("Show More Details", key=f"toggle_{idx}")
+        if show_more:
             vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input(f"Boil Off Rate (%/day) - {row['Name']}", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}")
             vessel_data.at[idx, "Margin"] = st.number_input(f"Margin (USD/day) - {row['Name']}", value=row["Margin"], key=f"margin_{idx}")
 
