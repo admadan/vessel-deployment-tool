@@ -67,7 +67,7 @@ vessel_data = pd.DataFrame({
     "Beam_m": [46] * 10,
     "Draft_m": [11.5] * 10,
     "Capacity_CBM": [160000] * 10,
-    "FuelEU_GHG_Compliance": [22, 22, 22, 18, 18, 18, 14, 14, 14, 14],
+    "FuelEU_GHG_Compliance": [65, 65, 65, 80, 80, 80, 95, 95, 95, 95],
     "CII_Rating": ["A", "A", "A", "B", "B", "B", "C", "C", "C", "C"],
     "Main_Engine_Consumption_MT_per_day": [70, 72, 74, 85, 88, 90, 100, 102, 105, 107],
     "Generator_Consumption_MT_per_day": [5, 5, 5, 6, 6, 6, 7, 7, 7, 7],
