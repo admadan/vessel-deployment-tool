@@ -211,11 +211,11 @@ voyage_df_sorted = voyage_df.sort_values(by="Voyage Profit ($)", ascending=False
 
 best_vessel = voyage_df_sorted.iloc[0]["Vessel"]
 
-#st.dataframe(
-#    voyage_df_sorted.style.apply(lambda row: ["background-color: lightgreen" if row["Vessel"] == best_vessel else "" for _ in row], axis=1)
+st.dataframe(
+    voyage_df_sorted.style.apply(lambda row: ["background-color: lightgreen" if row["Vessel"] == best_vessel else "" for _ in row], axis=1)
 )
 
-# st.success(f"🚢 Recommended Vessel for this Voyage: {best_vessel}")
+st.success(f"🚢 Recommended Vessel for this Voyage: {best_vessel}")
 
 st.subheader("💾 Save/Load Scenario")
 scenario_config = {
