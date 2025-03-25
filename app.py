@@ -103,36 +103,70 @@ for idx, row in vessel_data.iterrows():
         vessel_data.at[idx, "Draft_m"] = st.number_input("Draft (m)", value=row["Draft_m"], key=f"draft_{idx}")
         vessel_data.at[idx, "Margin"] = st.number_input("Margin (USD/day)", value=row["Margin"], key=f"margin_{idx}")
 
-        if st.toggle("Performance Details", key=f"toggle_{idx}"):
-            st.caption("Speed & Consumption Curve (auto-adjusted to Freight Market speed input)")
-            min_speed = max(8, st.session_state.get('assumed_speed', 11.0) - 3)
-            max_speed = min(20, st.session_state.get('assumed_speed', 11.0) + 3)
-            speed_range = list(range(int(min_speed), int(max_speed) + 1))
-            base_speed = st.session_state.get('assumed_speed', 11.0)
+# Performance details within vessel input
+if st.toggle("Performance Details", key=f"toggle_{idx}"):
+    st.caption("Speed & Consumption Curve (auto-adjusted to Freight Market speed input)")
+    
+    min_speed = max(8, assumed_speed - 3)
+    max_speed = min(20, assumed_speed + 3)
+    speed_range = list(range(int(min_speed), int(max_speed) + 1))
+    base_speed = assumed_speed
 
-            ref_consumption = row["Main_Engine_Consumption_MT_per_day"] + row["Generator_Consumption_MT_per_day"]
-            total_consumption = [ref_consumption * (speed / base_speed) ** 3 for speed in speed_range]
+    ref_consumption = row["Main_Engine_Consumption_MT_per_day"] + row["Generator_Consumption_MT_per_day"]
+    total_consumption = [ref_consumption * (speed / base_speed) ** 3 for speed in speed_range]
 
-            df_curve = pd.DataFrame({"Speed (knots)": speed_range, row["Name"]: total_consumption}).set_index("Speed (knots)")
+    df_curve = pd.DataFrame({
+        "Speed (knots)": speed_range,
+        row["Name"]: total_consumption
+    }).set_index("Speed (knots)")
 
-            compare_toggle = st.checkbox("Compare with another vessel", key=f"compare_toggle_{idx}")
-            if compare_toggle:
-                compare_vessel = st.selectbox("Select vessel to compare", [v for i, v in enumerate(vessel_data['Name']) if i != idx], key=f"compare_{idx}")
-                compare_row = vessel_data[vessel_data['Name'] == compare_vessel].iloc[0]
-                compare_ref_consumption = compare_row["Main_Engine_Consumption_MT_per_day"] + compare_row["Generator_Consumption_MT_per_day"]
-                compare_consumption = [compare_ref_consumption * (speed / base_speed) ** 3 for speed in speed_range]
-                df_curve[compare_vessel] = compare_total_consumption
+    compare_toggle = st.checkbox("Compare with another vessel", key=f"compare_toggle_{idx}")
+    if compare_toggle:
+        compare_vessel = st.selectbox(
+            "Select vessel to compare", 
+            [v for i, v in enumerate(vessel_data['Name']) if i != idx],
+            key=f"compare_{idx}"
+        )
+        compare_row = vessel_data[vessel_data['Name'] == compare_vessel].iloc[0]
+        compare_ref_consumption = compare_row["Main_Engine_Consumption_MT_per_day"] + compare_row["Generator_Consumption_MT_per_day"]
+        compare_total_consumption = [compare_ref_consumption * (speed / base_speed) ** 3 for speed in speed_range]
+        df_curve[compare_vessel] = compare_total_consumption
 
-            st.line_chart(df_curve)
+    st.line_chart(df_curve)
 
-            vessel_data.at[idx, "Main_Engine_Consumption_MT_per_day"] = st.number_input("Main Engine (tons/day)", value=row["Main_Engine_Consumption_MT_per_day"], key=f"me_{idx}")
-            vessel_data.at[idx, "Generator_Consumption_MT_per_day"] = st.number_input("Generator (tons/day)", value=row["Generator_Consumption_MT_per_day"], key=f"gen_{idx}")
-            c1, c2 = st.columns(2)
-            with c1:
-                vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input("Boil Off Rate (%)", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}", help="Percentage of cargo volume lost due to boil-off.", disabled=not show_details)
-            with c2:
-                vessel_data.at[idx, "CII_Rating"] = st.selectbox("CII Rating", options=["A", "B", "C", "D", "E"], index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]), key=f"cii_{idx}", help="Carbon Intensity Indicator Rating.", disabled=not show_details)
-                vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (gCO2e/MJ)", value=row["FuelEU_GHG_Compliance"], key=f"ghg_{idx}", help="GHG intensity of the vessel according to FuelEU regulations.", disabled=not show_details)
+    vessel_data.at[idx, "Main_Engine_Consumption_MT_per_day"] = st.number_input(
+        "Main Engine (tons/day)",
+        value=row["Main_Engine_Consumption_MT_per_day"],
+        key=f"me_{idx}"
+    )
+
+    vessel_data.at[idx, "Generator_Consumption_MT_per_day"] = st.number_input(
+        "Generator (tons/day)",
+        value=row["Generator_Consumption_MT_per_day"],
+        key=f"gen_{idx}"
+    )
+
+    c1, c2 = st.columns(2)
+    with c1:
+        vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input(
+            "Boil Off Rate (%)",
+            value=row["Boil_Off_Rate_percent"],
+            key=f"bor_{idx}",
+            help="Percentage of cargo volume lost daily due to boil-off."
+        )
+    with c2:
+        vessel_data.at[idx, "CII_Rating"] = st.selectbox(
+            "CII Rating",
+            options=["A", "B", "C", "D", "E"],
+            index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]),
+            key=f"cii_{idx}"
+        )
+        vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input(
+            "FuelEU GHG Intensity (gCO2e/MJ)",
+            value=row["FuelEU_GHG_Compliance"],
+            key=f"ghg_{idx}",
+            help="GHG intensity of the vessel according to FuelEU regulations."
+        )
 
             
             # Voyage Simulation within Performance Details
