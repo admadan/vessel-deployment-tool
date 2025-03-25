@@ -172,79 +172,38 @@ for index, vessel in vessel_data.iterrows():
 results_df = pd.DataFrame(results)
 st.dataframe(results_df)
 
-# ----------------------- Voyage Simulation Section -----------------------
-st.header("Voyage Simulation Advisor")
-voyage_days = st.number_input("Voyage Duration (days)", min_value=1, value=30)
-rate_choice = st.radio("Use Spot or TC Rate for Voyage Simulation", ["Spot Rate", "TC Rate"])
-selected_rate = base_spot_rate if rate_choice == "Spot Rate" else base_tc_rate
 
-voyage_results = []
-for index, vessel in vessel_data.iterrows():
-    ref_total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
-    adjusted_fuel = ref_total_fuel
-    if carbon_calc_method == "Boil Off Rate":
-        adjusted_fuel = vessel["Boil_Off_Rate_percent"] * vessel["Capacity_CBM"] / 1000
+Voyage Simulation Advisor
+st.header("🚢 Voyage Simulation Advisor")
 
-    auto_co2 = adjusted_fuel * 3.114
-    carbon_cost = auto_co2 * ets_price * voyage_days
-    fuel_cost = adjusted_fuel * lng_bunker_price * voyage_days
-    margin_cost = vessel["Margin"] * voyage_days
+voyage_distance = st.number_input("Voyage Distance (nautical miles)", value=5000)
+freight_rate = st.number_input("Freight Rate (USD/day)", value=60000)
 
-    ghg_penalty = 0
-    if vessel["FuelEU_GHG_Compliance"] > required_ghg_intensity:
-        excess = vessel["FuelEU_GHG_Compliance"] - required_ghg_intensity
-        ghg_penalty = excess * penalty_per_excess_unit * voyage_days
+for idx, vessel in vessel_data.iterrows():
+    with st.expander(f"🛳️ {vessel['Name']} Voyage Simulation"):
+        speeds = np.arange(10, 20.5, 0.5)
+        sim_results = []
+        for speed in speeds:
+            voyage_days = voyage_distance / (speed * 24)
+            total_consumption = (vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]) * (speed / st.session_state.get('assumed_speed', 11.0)) ** 3 * voyage_days
+            fuel_cost = total_consumption * p
+            ets_cost = total_consumption * 3.114 * ets_price
+            total_cost = fuel_cost + ets_cost + vessel["Margin"] * voyage_days
+            tce = (freight_rate * voyage_days - total_cost) / voyage_days
 
-    total_voyage_cost = fuel_cost + carbon_cost + margin_cost + ghg_penalty
-    total_freight = selected_rate * voyage_days
-    voyage_profit = total_freight - total_voyage_cost
+            sim_results.append({
+                "Speed (knots)": speed,
+                "Voyage Days": voyage_days,
+                "Fuel Consumption (MT)": total_consumption,
+                "Fuel Cost ($)": fuel_cost,
+                "ETS Cost ($)": ets_cost,
+                "Total Cost ($)": total_cost,
+                "TCE ($/day)": tce
+            })
 
-    voyage_results.append({
-        "Vessel": vessel["Name"],
-        "Voyage Cost ($)": round(total_voyage_cost, 1),
-        "Freight Revenue ($)": round(total_freight, 1),
-        "Voyage Profit ($)": round(voyage_profit, 1)
-    })
+        sim_df = pd.DataFrame(sim_results)
+        best_speed_row = sim_df.loc[sim_df['TCE ($/day)'].idxmax()]
+        best_speed = best_speed_row["Speed (knots)"]
 
-voyage_df = pd.DataFrame(voyage_results)
-voyage_df_sorted = voyage_df.sort_values(by="Voyage Profit ($)", ascending=False)
-
-best_vessel = voyage_df_sorted.iloc[0]["Vessel"]
-
-st.dataframe(
-    voyage_df_sorted.style.apply(lambda row: ["background-color: lightgreen" if row["Vessel"] == best_vessel else "" for _ in row], axis=1)
-)
-
-st.success(f"🚢 Recommended Vessel for this Voyage: {best_vessel}")
-
-st.subheader("💾 Save/Load Scenario")
-scenario_config = {
-    'scenario_name': scenario_name,
-    'ets_price': ets_price,
-    'lng_bunker_price': lng_bunker_price,
-    'fleet_size_number_supply': fleet_size_number_supply,
-    'fleet_size_dwt_supply_in_dwt_million': fleet_size_dwt_supply_in_dwt_million,
-    'utilization_constant': utilization_constant,
-    'assumed_speed': assumed_speed,
-    'sea_margin': sea_margin,
-    'assumed_laden_days': assumed_laden_days,
-    'demand_billion_ton_mile': demand_billion_ton_mile,
-    'auto_tightness': auto_tightness,
-    'base_spot_rate': base_spot_rate,
-    'base_tc_rate': base_tc_rate,
-    'carbon_calc_method': carbon_calc_method,
-    'vessel_data': vessel_data.to_dict(orient='records')
-}
-
-col1, col2 = st.columns(2)
-with col1:
-    json_string = json.dumps(scenario_config)
-    st.download_button("📥 Download Scenario JSON", data=json_string, file_name=f"{scenario_name}_scenario.json")
-with col2:
-    uploaded_file = st.file_uploader("📤 Upload Saved Scenario", type="json")
-    if uploaded_file is not None:
-        loaded_config = json.load(uploaded_file)
-        vessel_data = pd.DataFrame(loaded_config['vessel_data'])
-        st.session_state.loaded_data = loaded_config
-        st.success("Scenario loaded successfully!")
-
+        st.dataframe(sim_df.style.apply(lambda x: ["background-color: lightgreen" if x["Speed (knots)"] == best_speed else "" for _ in x], axis=1))
+        st.success(f"Optimal Economical Speed: {best_speed:.1f} knots with TCE of ${best_speed_row['TCE ($/day)']:.2f}/day")
