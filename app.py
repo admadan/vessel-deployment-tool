@@ -173,7 +173,7 @@ results_df = pd.DataFrame(results)
 st.dataframe(results_df)
 
 
-Voyage Simulation Advisor
+#Voyage Simulation Advisor
 st.header("🚢 Voyage Simulation Advisor")
 
 voyage_distance = st.number_input("Voyage Distance (nautical miles)", value=5000)
