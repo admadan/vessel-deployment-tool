@@ -60,6 +60,24 @@ carbon_calc_method = st.sidebar.radio("Carbon Cost Based On", ["Main Engine Cons
 # ----------------------- MAIN PANEL -----------------------
 st.title("LNG Fleet Deployment Simulator")
 
+# Evans & Marlow Speed Calculator Section
+st.header("🔍 Evans & Marlow Optimal Speed Calculator")
+with st.expander("Calculate optimal speed based on freight rate, fuel price, and distance"):
+    R = st.number_input("Freight Rate (USD/ton-mile)", min_value=0.0, value=50.0)
+    p = st.number_input("Fuel Price (USD/ton)", min_value=0.0, value=730.0)
+    k = st.number_input("Ship Fuel Constant (k)", min_value=0.0, value=0.0002)
+    d = st.number_input("Voyage Distance (nm)", min_value=0.0, value=5000.0)
+
+    if all([R > 0, p > 0, k > 0, d > 0]):
+        S_opt = ((R / (3 * p * k * d)) ** 0.5)
+        st.success(f"Recommended Optimal Speed: {S_opt:.1f} knots")
+        if st.button("Apply this speed to Freight Market Inputs"):
+            st.session_state['assumed_speed'] = S_opt
+    else:
+        st.info("Please enter positive values for all fields.")
+
+
+
 vessel_data = pd.DataFrame({
     "Vessel_ID": range(1, 11),
     "Name": [f"LNG Carrier {chr(65 + i)}" for i in range(10)],
