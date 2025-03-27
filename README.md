@@ -11,6 +11,9 @@ The Scope of this project is limited to LNG shipping industry.
 
 
 
+
+
+
 VALUE PROPOSITION
 
 The Vessel Deployment & Voyage Simulation Tool helps shipping companies make smarter, data-driven decisions about fleet management and vessel chartering, directly increasing profitability and reducing risk. By precisely calculating daily vessel operating costs (including fuel, carbon charges, and regulatory penalties), it identifies the most profitable deployment strategy (Spot vs. TC), thus ensuring optimal use of each vessel.
@@ -20,6 +23,9 @@ Its scenario-based approach allows chartering teams to quickly assess how change
 In the future, by incorporating machine-learning-driven freight-rate predictions, the tool will offer powerful forecasting capabilities, further enhancing strategic planning and competitiveness.
 
 In short, the tool turns complex market, operational, and regulatory data into clear, actionable insights, enabling LNG operators to maximize profit, manage risk effectively, and navigate increasingly stringent environmental regulations with confidence.
+
+
+
 
 
 
@@ -37,6 +43,9 @@ This is exactly what the LNG Vessel Simulation Tool does—but for big ships ins
 If today's fare is higher than the taxi's breakeven cost, you'd send it out right away to earn money immediately. But if today's fares are low, you'd either look for a long-term deal at a steady fare or keep the taxi parked until fares rise again.
 
 Just as you might predict when more customers need taxis (like during busy holiday weekends or big events), your tool in the future could use smart technology called machine learning to predict shipping rates ahead of time, letting ship managers plan better.
+
+
+
 
 
 
