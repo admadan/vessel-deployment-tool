@@ -94,6 +94,7 @@ vessel_data = pd.DataFrame({
 })
 
 # Vessel Input Section
+st.header("🛠️ Vessel Input Section")
 cols = st.columns(2)
 for idx, row in vessel_data.iterrows():
     with cols[idx % 2].expander(f"🚢 {row['Name']}"):
@@ -103,96 +104,34 @@ for idx, row in vessel_data.iterrows():
         vessel_data.at[idx, "Draft_m"] = st.number_input("Draft (m)", value=row["Draft_m"], key=f"draft_{idx}")
         vessel_data.at[idx, "Margin"] = st.number_input("Margin (USD/day)", value=row["Margin"], key=f"margin_{idx}")
 
-# Performance details within vessel input
-if st.toggle("Performance Details", key=f"toggle_{idx}"):
-    st.caption("Speed & Consumption Curve (auto-adjusted to Freight Market speed input)")
-    
-    min_speed = max(8, assumed_speed - 3)
-    max_speed = min(20, assumed_speed + 3)
-    speed_range = list(range(int(min_speed), int(max_speed) + 1))
-    base_speed = assumed_speed
+        show_details = st.toggle("Show Performance Details", key=f"toggle_{idx}")
+        if show_details:
+            base_speed = assumed_speed
+            min_speed = max(8, base_speed - 3)
+            max_speed = min(20, base_speed + 3)
+            speed_range = list(range(int(min_speed), int(max_speed) + 1))  # Speed range in knots for performance curve
+            ref_total_consumption = row["Main_Engine_Consumption_MT_per_day"] + row["Generator_Consumption_MT_per_day"]
+            total_consumption = [ref_total_consumption * (speed / base_speed) ** 3 for speed in speed_range]
+            df_curve = pd.DataFrame({"Speed (knots)": speed_range, row["Name"]: total_consumption}).set_index("Speed (knots)")
 
-    ref_consumption = row["Main_Engine_Consumption_MT_per_day"] + row["Generator_Consumption_MT_per_day"]
-    total_consumption = [ref_consumption * (speed / base_speed) ** 3 for speed in speed_range]
+            compare_toggle = st.checkbox("Compare with another vessel", key=f"compare_toggle_{idx}", disabled=not show_details)
+            if compare_toggle:
+                compare_vessel = st.selectbox("Select vessel to compare", [v for i, v in enumerate(vessel_data['Name']) if i != idx], key=f"compare_{idx}", disabled=not show_details)
+                compare_row = vessel_data[vessel_data['Name'] == compare_vessel].iloc[0]
+                compare_ref_consumption = compare_row["Main_Engine_Consumption_MT_per_day"] + compare_row["Generator_Consumption_MT_per_day"]
+                compare_total_consumption = [compare_ref_consumption * (speed / base_speed) ** 3 for speed in speed_range]
+                df_curve[compare_vessel] = compare_total_consumption
 
-    df_curve = pd.DataFrame({
-        "Speed (knots)": speed_range,
-        row["Name"]: total_consumption
-    }).set_index("Speed (knots)")
+            st.line_chart(df_curve)
 
-    compare_toggle = st.checkbox("Compare with another vessel", key=f"compare_toggle_{idx}")
-    if compare_toggle:
-        compare_vessel = st.selectbox(
-            "Select vessel to compare", 
-            [v for i, v in enumerate(vessel_data['Name']) if i != idx],
-            key=f"compare_{idx}"
-        )
-        compare_row = vessel_data[vessel_data['Name'] == compare_vessel].iloc[0]
-        compare_ref_consumption = compare_row["Main_Engine_Consumption_MT_per_day"] + compare_row["Generator_Consumption_MT_per_day"]
-        compare_total_consumption = [compare_ref_consumption * (speed / base_speed) ** 3 for speed in speed_range]
-        df_curve[compare_vessel] = compare_total_consumption
-
-    st.line_chart(df_curve)
-
-    vessel_data.at[idx, "Main_Engine_Consumption_MT_per_day"] = st.number_input(
-        "Main Engine (tons/day)",
-        value=row["Main_Engine_Consumption_MT_per_day"],
-        key=f"me_{idx}"
-    )
-
-    vessel_data.at[idx, "Generator_Consumption_MT_per_day"] = st.number_input(
-        "Generator (tons/day)",
-        value=row["Generator_Consumption_MT_per_day"],
-        key=f"gen_{idx}"
-    )
-
-    c1, c2 = st.columns(2)
-    with c1:
-        vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input(
-            "Boil Off Rate (%)",
-            value=row["Boil_Off_Rate_percent"],
-            key=f"bor_{idx}",
-            help="Percentage of cargo volume lost daily due to boil-off."
-        )
-    with c2:
-        vessel_data.at[idx, "CII_Rating"] = st.selectbox(
-            "CII Rating",
-            options=["A", "B", "C", "D", "E"],
-            index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]),
-            key=f"cii_{idx}"
-        )
-        vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input(
-            "FuelEU GHG Intensity (gCO2e/MJ)",
-            value=row["FuelEU_GHG_Compliance"],
-            key=f"ghg_{idx}",
-            help="GHG intensity of the vessel according to FuelEU regulations."
-        )
-
-            
-            # Voyage Simulation within Performance Details
-            st.subheader("🧭 Voyage Simulation Advisor")
-            voyage_distance = st.number_input("Voyage Distance (nautical miles)", min_value=100, value=5000, key=f"distance_{idx}")
-            speed_selected = st.selectbox("Select Speed for Voyage Simulation", speed_range, index=2, key=f"voy_speed_{idx}")
-
-            voyage_days = voyage_distance / (speed_selected * 24)
-            consumption_daily = ref_consumption * (speed_selected / base_speed) ** 3
-            fuel_cost = consumption_per_day * lng_bunker_price
-            ets_cost = consumption_per_day * ets_price * 3.114
-            total_cost = (fuel_cost + ets_cost + row["Margin"]) * voyage_days
-            tce = freight_rate_input - (total_cost / voyage_days)
-
-            cost_summary = pd.DataFrame({
-                "Speed (knots)": speed_range,
-                "Voyage Days": [voyage_distance / (s * 24) for speed in speed_range],
-                "Fuel Cost (USD/day)": [fuel_cost]*len(speed_range),
-                "ETS Cost (USD/day)": [ets_cost]*len(speed_range),
-                "Total Cost (USD/day)": [total_cost/voyage_days]*len(speed_range),
-                "TCE (USD/day)": [tce]*len(speed_range)
-            }).set_index("Speed (knots)")
-
-            best_speed = df_curve['TCE (USD/day)'].idxmax()
-
-            st.dataframe(cost_df.style.highlight_max(subset=['TCE (USD/day)'], color='lightgreen'))
+            vessel_data.at[idx, "Main_Engine_Consumption_MT_per_day"] = st.number_input("Main Engine (tons/day)", value=row["Main_Engine_Consumption_MT_per_day"], key=f"me_{idx}", help="Daily fuel consumption of the main engine in metric tons.", disabled=not show_details)
+            vessel_data.at[idx, "Generator_Consumption_MT_per_day"] = st.number_input("Generator (tons/day)", value=row["Generator_Consumption_MT_per_day"], key=f"gen_{idx}", help="Daily fuel consumption of onboard generators in metric tons.", disabled=not show_details)
+            c1, c2 = st.columns(2)
+            with c1:
+                vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input("Boil Off Rate (%)", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}", help="Percentage of cargo volume lost due to boil-off.", disabled=not show_details)
+            with c2:
+                vessel_data.at[idx, "CII_Rating"] = st.selectbox("CII Rating", options=["A", "B", "C", "D", "E"], index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]), key=f"cii_{idx}", help="Carbon Intensity Indicator Rating.", disabled=not show_details)
+                vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (gCO2e/MJ)", value=row["FuelEU_GHG_Compliance"], key=f"ghg_{idx}", help="GHG intensity of the vessel according to FuelEU regulations.", disabled=not show_details)
 
             
         
@@ -252,3 +191,37 @@ results_df = pd.DataFrame(results)
 st.dataframe(results_df)
 
 
+#Voyage Simulation Advisor
+st.header("🚢 Voyage Simulation Advisor")
+
+voyage_distance = st.number_input("Voyage Distance (nautical miles)", value=5000)
+freight_rate = st.number_input("Freight Rate (USD/day)", value=60000)
+
+for idx, vessel in vessel_data.iterrows():
+    with st.expander(f"🛳️ {vessel['Name']} Voyage Simulation"):
+        speeds = np.arange(10, 20.5, 0.5)
+        sim_results = []
+        for speed in speeds:
+            voyage_days = voyage_distance / (speed * 24)
+            total_consumption = (vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]) * (speed / st.session_state.get('assumed_speed', 11.0)) ** 3 * voyage_days
+            fuel_cost = total_consumption * p
+            ets_cost = total_consumption * 3.114 * ets_price
+            total_cost = fuel_cost + ets_cost + vessel["Margin"] * voyage_days
+            tce = (freight_rate * voyage_days - total_cost) / voyage_days
+
+            sim_results.append({
+                "Speed (knots)": speed,
+                "Voyage Days": voyage_days,
+                "Fuel Consumption (MT)": total_consumption,
+                "Fuel Cost ($)": fuel_cost,
+                "ETS Cost ($)": ets_cost,
+                "Total Cost ($)": total_cost,
+                "TCE ($/day)": tce
+            })
+
+        sim_df = pd.DataFrame(sim_results)
+        best_speed_row = sim_df.loc[sim_df['TCE ($/day)'].idxmax()]
+        best_speed = best_speed_row["Speed (knots)"]
+
+        st.dataframe(sim_df.style.apply(lambda x: ["background-color: lightgreen" if x["Speed (knots)"] == best_speed else "" for _ in x], axis=1))
+        st.success(f"Optimal Economical Speed: {best_speed:.1f} knots with TCE of ${best_speed_row['TCE ($/day)']:.2f}/day")
