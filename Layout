@@ -1,8 +1,8 @@
 
 Dashboard 1 – 
-a.	Demand/Supply dynamics - Equilibrium calculator – Excess/surplus demand or supply
+a.Demand/Supply dynamics - Equilibrium calculator – Excess/surplus demand or supply
  
-b.	Market data can be used for - LNG, Bulk, Tanker shipping segment
+b.Market data can be used for - LNG, Bulk, Tanker shipping segment
 We start with LNG.
 
 Deployment simulation - TC or Spot market? The most profitable market
@@ -15,13 +15,13 @@ Dynamic Data Table for –
 
 Dashboard 2 – 
 
-a. Vessel details
+a.Vessel details
 -	Input vessel particulars – Length, Beam, Draft, DWT, Draft
 -	Performance details - speed and consumption values and curves
 -	Performance curves comparison feature
--	Generators consumption
+-	Generator consumption
 
-b. Voyage Simulation and Optimal speed calculator for each vessel
+b.Voyage Simulation and Optimal speed calculator for each vessel
 -	Input for fuel price, freight market rate, voyage days, distance
 -	Calculate the optimal speed in each vessel section using the inputs
 -	Voyage simulation data table for Total voyage costs (including FuelEU penalties, fuel, carbon, margin), Freight revenue and profitability per vessel
@@ -29,7 +29,7 @@ b. Voyage Simulation and Optimal speed calculator for each vessel
 
 
 Dashboard 3 – 
-a.	Machine learning predictions
-b.	LSTM Neural Network Model Integration
-c.	Prediction of Weekly, monthly, Yearly TC and spot rates, Demand
-d.	Integrate data for bulk, Tankers, LPG
+a.Machine learning predictions
+b.LSTM Neural Network Model Integration
+c.Prediction of Weekly, monthly, Yearly TC and spot rates, Demand
+d.Integrate data for bulk, Tankers, LPG
