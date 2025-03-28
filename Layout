@@ -1,0 +1,17 @@
+
+
+
+Dashboard 1 - Demand/Supply dynamics, Deployment simulation
+
+
+
+
+Dashboard 2 - Vessel Input (Basic details, Speed and Consumption, etc), Optimal speed calculator, Voyage simulator
+
+
+
+
+Dashboard 3 - Machine learning predictions
+              LSTM Neural network model integration
+              Prediction of TC and spot rates, Demand
+              Integrate Panamax bulk carrier data
