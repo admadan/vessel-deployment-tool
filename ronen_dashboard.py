@@ -47,26 +47,26 @@ st.title("🚢 Ronen Optimal Speed Dashboard – Final Version")
 with st.sidebar:
     st.header("Input Parameters")
     
-    L = st.number_input("Voyage Distance (nm)", value=4000)
-    Dp = st.number_input("Port Days", value=2.0)
+    L = st.number_input("Voyage Distance (nm)", value=4000, help="Total nautical miles to be sailed")
+    Dp = st.number_input("Port Days", value=2.0, help="Number of days spent in port (loading/unloading)")
     st.markdown("### ℹ️ Speed Inputs Explained")
     st.markdown("- **V₀ (Reference Speed):** Used to estimate fuel consumption using cube law.")
     st.markdown("- **Vm (Minimum Speed):** Used as the lower bound in optimization.")
     st.markdown("- **Assumed Speed:** Used to calculate revenue from freight/day × voyage days.")
     st.markdown("- **VR (Reference Speed for Bonus):** Used in Model 3 to calculate bonus/penalty for early/late arrival.")
     
-    V0 = st.slider("Reference Speed (V0) [knots]", 0.0, 25.0, 19.0)
-    F0 = st.slider("Main Engine Fuel/day at V0 (tons)", 50.0, 300.0, 120.0)
-    Fc = st.slider("Fuel Cost ($/ton)", 200, 1200, 800)
-    C = st.slider("Daily Ops Cost ($)", 5000, 50000, 12000)
-    Vm = st.slider("Minimum Speed Vm [knots]", 0.0, 15.0, 10.0)
+    V0 = st.slider("Reference Speed (V0) [knots]", 0.0, 25.0, 19.0, help="Speed at which fuel consumption F₀ is measured")
+    F0 = st.slider("Main Engine Fuel/day at V0 (tons)", 50.0, 300.0, 120.0, help="Main engine fuel consumption at reference speed V₀")
+    Fc = st.slider("Fuel Cost ($/ton)", 200, 1200, 800, help="Cost per ton of fuel consumed")
+    C = st.slider("Daily Ops Cost ($)", 5000, 50000, 12000, help="Fixed daily operating cost, excluding propulsion")
+    Vm = st.slider("Minimum Speed Vm [knots]", 0.0, 15.0, 10.0, help="Minimum allowed vessel speed during optimization")
     
-    freight_rate = st.slider("Freight Rate ($/day)", 0, 200000, 100000, step=5000)
-    assumed_speed = st.slider("Assumed Speed for Revenue [knots]", 0.0, V0, 15.0)
+    freight_rate = st.slider("Freight Rate ($/day)", 0, 200000, 100000, step=5000, help="Expected revenue per day from charterer")
+    assumed_speed = st.slider("Assumed Speed for Revenue [knots]", 0.0, V0, 15.0, help="Used to calculate total voyage duration for revenue")
     
-    Ca = st.slider("Alternative Value of Ship ($/day)", 20000, 100000, 70000)
-    K = st.slider("Bonus/Penalty per day ($)", 0, 50000, 25000)
-    VR = st.slider("Reference Contract Speed (VR) [knots]", 0.0, 25.0, 18.0)
+    Ca = st.slider("Alternative Value of Ship ($/day)", 20000, 100000, 70000, help="Daily value of the vessel if idle or under alternative use")
+    K = st.slider("Bonus/Penalty per day ($)", 0, 50000, 25000, help="Value of bonus or penalty per day based on arrival deviation")
+    VR = st.slider("Reference Contract Speed (VR) [knots]", 0.0, 25.0, 18.0, help="Contractual speed used in Model 3 bonus/penalty calculation")
     
     # === Calculations ===
     V_range = np.linspace(Vm, V0, 300)
@@ -104,8 +104,8 @@ with col1:
     st.subheader("📘 Model 1: Fixed Revenue")
     st.markdown(f"- **Optimum Speed:** {V1_opt:.2f} kn")
     st.caption("Speed (V) affects:")
-    st.latex(r"D_s = \frac{L}{24V}") 
-rac{L}{24V}")
+    st.latex(r"D_s = \f\frac{L}{24V}") 
+\frac{L}{24V}")
     st.latex(r"F \propto V^3")
     st.latex(r"D = D_s + D_p")
     st.markdown("""
@@ -123,8 +123,8 @@ with col2:
     st.subheader("📙 Model 2: Ballast Leg")
     st.markdown(f"- **Optimum Speed:** {V2_opt:.2f} kn")
     st.caption("Speed (V) affects:")
-    st.latex(r"D_s = \frac{L}{24V}") 
-rac{L}{24V}")
+    st.latex(r"D_s = \f\frac{L}{24V}") 
+\frac{L}{24V}")
     st.latex(r"F \propto V^3")
     st.latex(r"D = D_s + D_p")
     st.markdown("""
@@ -141,8 +141,8 @@ with col3:
     st.subheader("📗 Model 3: Bonus/Penalty")
     st.markdown(f"- **Optimum Speed:** {V3_opt:.2f} kn")
     st.caption("Speed (V) affects:")
-    st.latex(r"D_s = \frac{L}{24V}") 
-rac{L}{24V}")
+    st.latex(r"D_s = \f\frac{L}{24V}") 
+\frac{L}{24V}")
     st.latex(r"F \propto V^3")
     st.latex(r"D = D_s + D_p")
     st.markdown("""
@@ -169,7 +169,7 @@ with st.expander("ℹ️ Model Equations"):
 
     st.markdown("### **Model 2 – Ballast (Empty Leg)**")
     st.markdown("**Total Cost:**")
-    st.latex(r"Z = \left(C_a + F_0 F_c \left(\frac{V}{V_0}\right)^3\right) \cdot \frac{L}{24V}")
+    st.latex(r"Z = \left(C_a + F_0 F_c \left(\frac{V}{V_0}\right)^3\right) \cdot \f\frac{L}{24V}")
     st.markdown("**Optimal Speed:**")
     st.latex(r"V^* = V_0 \left(\frac{C_a}{2 F_0 F_c}\right)^{1/3}")
 
