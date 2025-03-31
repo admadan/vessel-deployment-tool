@@ -98,6 +98,10 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.subheader("📘 Model 1: Fixed Revenue")
     st.markdown(f"- **Optimum Speed:** {V1_opt:.2f} kn")
+    st.caption("Speed (V) affects:")
+    st.latex(r"D_s = rac{L}{24V}")
+    st.latex(r"F \propto V^3")
+    st.latex(r"D = D_s + D_p")
     st.markdown("""
     <sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
     """, unsafe_allow_html=True)
@@ -112,6 +116,10 @@ with col1:
 with col2:
     st.subheader("📙 Model 2: Ballast Leg")
     st.markdown(f"- **Optimum Speed:** {V2_opt:.2f} kn")
+    st.caption("Speed (V) affects:")
+    st.latex(r"D_s = rac{L}{24V}")
+    st.latex(r"F \propto V^3")
+    st.latex(r"D = D_s + D_p")
     st.markdown("""
     <sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
     """, unsafe_allow_html=True)
@@ -125,6 +133,10 @@ with col2:
 with col3:
     st.subheader("📗 Model 3: Bonus/Penalty")
     st.markdown(f"- **Optimum Speed:** {V3_opt:.2f} kn")
+    st.caption("Speed (V) affects:")
+    st.latex(r"D_s = rac{L}{24V}")
+    st.latex(r"F \propto V^3")
+    st.latex(r"D = D_s + D_p")
     st.markdown("""
     <sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
     """, unsafe_allow_html=True)
