@@ -133,23 +133,24 @@ with col3:
 # === Info Section ===
 
 
+
 with st.expander("ℹ️ Model Equations"):
     st.markdown("### **Model 1 – Income-Generating**")
     st.markdown("**Daily Profit:**")
-    st.latex(r"Z = rac{R - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
+    st.latex(r"Z = rac{R - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
 
     st.markdown("### **Model 2 – Ballast (Empty Leg)**")
     st.markdown("**Total Cost:**")
-    st.latex(r"Z = \left(C_a + F_0 F_c \left(rac{V}{V_0}
+    st.latex(r"Z = \left(C_a + F_0 F_c \left(rac{V}{V_0}
 ight)^3
-ight) \cdot rac{L}{24V}")
+ight) \cdot rac{L}{24V}")
     st.markdown("**Optimal Speed:**")
-    st.latex(r"V^* = V_0 \left(rac{C_a}{2 F_0 F_c}
+    st.latex(r"V^* = V_0 \left(rac{C_a}{2 F_0 F_c}
 ight)^{1/3}")
 
     st.markdown("### **Model 3 – Bonus/Penalty Contracts**")
     st.markdown("**Adjusted Revenue:**")
-    st.latex(r"R' = R + rac{K L}{24} \left(rac{1}{V_R} - rac{1}{V}
+    st.latex(r"R' = R + rac{K L}{24} \left(rac{1}{V_R} - rac{1}{V}
 ight)")
     st.markdown("**Daily Profit:**")
-    st.latex(r"Z = rac{R' - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
+    st.latex(r"Z = rac{R' - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
