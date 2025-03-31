@@ -152,10 +152,7 @@ with col3:
     st.plotly_chart(fig3, use_container_width=True)
     
     # === Info Section ===
-    
-    
-    
-    
+
 with st.expander("ℹ️ Model Equations"):
     st.markdown("### **Model 1 – Income-Generating**")
     st.markdown("**Daily Profit:**")
