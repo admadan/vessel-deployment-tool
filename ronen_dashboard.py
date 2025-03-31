@@ -50,18 +50,18 @@ with st.sidebar:
     L = st.number_input("Voyage Distance (nm)", value=4000)
     Dp = st.number_input("Port Days", value=2.0)
 
-    V0 = st.slider("Reference Speed (V0) [knots]", 10.0, 25.0, 19.0)
+    V0 = st.slider("Reference Speed (V0) [knots]", 0.0, 25.0, 19.0)
     F0 = st.slider("Main Engine Fuel/day at V0 (tons)", 50.0, 300.0, 120.0)
     Fc = st.slider("Fuel Cost ($/ton)", 200, 1200, 800)
     C = st.slider("Daily Ops Cost ($)", 5000, 50000, 12000)
-    Vm = st.slider("Minimum Speed Vm [knots]", 8.0, 15.0, 10.0)
+    Vm = st.slider("Minimum Speed Vm [knots]", 0.0, 15.0, 10.0)
 
     freight_rate = st.slider("Freight Rate ($/day)", 0, 200000, 100000, step=5000)
-    assumed_speed = st.slider("Assumed Speed for Revenue [knots]", Vm, V0, 15.0)
+    assumed_speed = st.slider("Assumed Speed for Revenue [knots]", 0.0, V0, 15.0)
 
     Ca = st.slider("Alternative Value of Ship ($/day)", 20000, 100000, 70000)
     K = st.slider("Bonus/Penalty per day ($)", 0, 50000, 25000)
-    VR = st.slider("Reference Contract Speed (VR) [knots]", 10.0, 25.0, 18.0)
+    VR = st.slider("Reference Contract Speed (VR) [knots]", 0.0, 25.0, 18.0)
 
 # === Calculations ===
 V_range = np.linspace(Vm, V0, 300)
