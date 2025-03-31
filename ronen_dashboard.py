@@ -96,7 +96,6 @@ OC3 = operating_cost(C, F3, Fc, Ds3)
 col1, col2, col3 = st.columns(3)
 
 with col1:
-
     st.subheader("📘 Model 1: Fixed Revenue")
     st.markdown(f"- **Optimum Speed:** {V1_opt:.2f} kn")
     st.markdown("""
@@ -111,7 +110,6 @@ with col1:
     fig1.update_layout(title="Model 1: Daily Profit", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
     st.plotly_chart(fig1, use_container_width=True)
 with col2:
-
     st.subheader("📙 Model 2: Ballast Leg")
     st.markdown(f"- **Optimum Speed:** {V2_opt:.2f} kn")
     st.markdown("""
@@ -125,7 +123,6 @@ with col2:
     fig2.update_layout(title="Model 2: Total Cost", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
     st.plotly_chart(fig2, use_container_width=True)
 with col3:
-
     st.subheader("📗 Model 3: Bonus/Penalty")
     st.markdown(f"- **Optimum Speed:** {V3_opt:.2f} kn")
     st.markdown("""
@@ -139,17 +136,17 @@ with col3:
     fig3.add_trace(go.Scatter(x=[V3_opt], y=[Z3_opt], mode='markers+text', name="Optimum", text=[f"{V3_opt:.2f} kn"], marker=dict(size=10, color='green')))
     fig3.update_layout(title="Model 3: Profit with Bonus/Penalty", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
     st.plotly_chart(fig3, use_container_width=True)
-
+    
     # === Info Section ===
-
-
-
+    
+    
+    
     with st.expander("ℹ️ Model Equations"):
     st.markdown("### **Model 1 – Income-Generating**")
     st.markdown("**Daily Profit:**")
     st.latex(r"Z = \frac{R - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
     rac{R - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
-
+    
     st.markdown("### **Model 2 – Ballast (Empty Leg)**")
     st.markdown("**Total Cost:**")
     st.latex(r"Z = \frac{R - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}") \left(C_a + F_0 F_c \left(
@@ -161,7 +158,7 @@ with col3:
     st.latex(r"V^* = V_0 \left(
     rac{C_a}{2 F_0 F_c}
     ight)^{1/3}")
-
+    
     st.markdown("### **Model 3 – Bonus/Penalty Contracts**")
     st.markdown("**Adjusted Revenue:**")
     st.latex(r"R' = R +
