@@ -95,12 +95,13 @@ OC3 = operating_cost(C, F3, Fc, Ds3)
 # === Metrics and Charts ===
 col1, col2, col3 = st.columns(3)
 
-with col1:
+with col1::
+
     st.subheader("📘 Model 1: Fixed Revenue")
     st.markdown(f"- **Optimum Speed:** {V1_opt:.2f} kn")
-st.markdown("""
-<sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
-""", unsafe_allow_html=True)
+    st.markdown("""
+    <sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
+    """, unsafe_allow_html=True)
     st.markdown(f"- **Daily Profit (Z):** ${Z1_opt:,.0f}")
     st.markdown(f"- **Total Profit:** ${P1:,.0f}")
     st.markdown(f"- **Total Op Cost:** ${OC1:,.0f}")
@@ -109,13 +110,13 @@ st.markdown("""
     fig1.add_trace(go.Scatter(x=[V1_opt], y=[Z1_opt], mode='markers+text', name="Optimum", text=[f"{V1_opt:.2f} kn"], marker=dict(size=10, color='blue')))
     fig1.update_layout(title="Model 1: Daily Profit", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
     st.plotly_chart(fig1, use_container_width=True)
+with col2::
 
-with col2:
     st.subheader("📙 Model 2: Ballast Leg")
     st.markdown(f"- **Optimum Speed:** {V2_opt:.2f} kn")
-st.markdown("""
-<sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
-""", unsafe_allow_html=True)
+    st.markdown("""
+    <sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
+    """, unsafe_allow_html=True)
     st.markdown(f"- **Total Cost (Z):** ${Z2_opt:,.0f}")
     st.markdown(f"- **Total Op Cost:** ${OC2:,.0f}")
     fig2 = go.Figure()
@@ -123,13 +124,13 @@ st.markdown("""
     fig2.add_trace(go.Scatter(x=[V2_opt], y=[Z2_opt], mode='markers+text', name="Optimum", text=[f"{V2_opt:.2f} kn"], marker=dict(size=10, color='orange')))
     fig2.update_layout(title="Model 2: Total Cost", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
     st.plotly_chart(fig2, use_container_width=True)
+with col3::
 
-with col3:
     st.subheader("📗 Model 3: Bonus/Penalty")
     st.markdown(f"- **Optimum Speed:** {V3_opt:.2f} kn")
-st.markdown("""
-<sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
-""", unsafe_allow_html=True)
+    st.markdown("""
+    <sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
+    """, unsafe_allow_html=True)
     st.markdown(f"- **Daily Profit (Z):** ${Z3_opt:,.0f}")
     st.markdown(f"- **Total Profit:** ${P3:,.0f}")
     st.markdown(f"- **Total Op Cost:** ${OC3:,.0f}")
@@ -139,27 +140,35 @@ st.markdown("""
     fig3.update_layout(title="Model 3: Profit with Bonus/Penalty", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
     st.plotly_chart(fig3, use_container_width=True)
 
-# === Info Section ===
+    # === Info Section ===
 
 
 
-with st.expander("ℹ️ Model Equations"):
+    with st.expander("ℹ️ Model Equations"):
     st.markdown("### **Model 1 – Income-Generating**")
     st.markdown("**Daily Profit:**")
-    st.latex(r"Z = rac{R - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
+    st.latex(r"Z =
+    rac{R - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
 
     st.markdown("### **Model 2 – Ballast (Empty Leg)**")
     st.markdown("**Total Cost:**")
-    st.latex(r"Z = \left(C_a + F_0 F_c \left(rac{V}{V_0}
-ight)^3
-ight) \cdot rac{L}{24V}")
+    st.latex(r"Z = \left(C_a + F_0 F_c \left(
+    rac{V}{V_0}
+    ight)^3
+    ight) \cdot
+    rac{L}{24V}")
     st.markdown("**Optimal Speed:**")
-    st.latex(r"V^* = V_0 \left(rac{C_a}{2 F_0 F_c}
-ight)^{1/3}")
+    st.latex(r"V^* = V_0 \left(
+    rac{C_a}{2 F_0 F_c}
+    ight)^{1/3}")
 
     st.markdown("### **Model 3 – Bonus/Penalty Contracts**")
     st.markdown("**Adjusted Revenue:**")
-    st.latex(r"R' = R + rac{K L}{24} \left(rac{1}{V_R} - rac{1}{V}
-ight)")
+    st.latex(r"R' = R +
+    rac{K L}{24} \left(
+    rac{1}{V_R} -
+    rac{1}{V}
+    ight)")
     st.markdown("**Daily Profit:**")
-    st.latex(r"Z = rac{R' - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
+    st.latex(r"Z =
+    rac{R' - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
