@@ -104,11 +104,6 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.subheader("📘 Model 1: Fixed Revenue")
     st.markdown(f"- **Optimum Speed:** {V1_opt:.2f} kn")
-    st.caption("Speed (V) affects:")
-    
-    st.markdown("""
-    <sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
-    """, unsafe_allow_html=True)
     st.markdown(f"- **Daily Profit (Z):** ${Z1_opt:,.0f}")
     st.markdown(f"- **Total Profit:** ${P1:,.0f}")
     st.markdown(f"- **Total Op Cost:** ${OC1:,.0f}")
@@ -121,11 +116,6 @@ with col1:
 with col2:
     st.subheader("📙 Model 2: Ballast Leg")
     st.markdown(f"- **Optimum Speed:** {V2_opt:.2f} kn")
-    st.caption("Speed (V) affects:")
-    
-    st.markdown("""
-    <sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
-    """, unsafe_allow_html=True)
     st.markdown(f"- **Total Cost (Z):** ${Z2_opt:,.0f}")
     st.markdown(f"- **Total Op Cost:** ${OC2:,.0f}")
     fig2 = go.Figure()
@@ -137,11 +127,6 @@ with col2:
 with col3:
     st.subheader("📗 Model 3: Bonus/Penalty")
     st.markdown(f"- **Optimum Speed:** {V3_opt:.2f} kn")
-    st.caption("Speed (V) affects:")
-    
-    st.markdown("""
-    <sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
-    """, unsafe_allow_html=True)
     st.markdown(f"- **Daily Profit (Z):** ${Z3_opt:,.0f}")
     st.markdown(f"- **Total Profit:** ${P3:,.0f}")
     st.markdown(f"- **Total Op Cost:** ${OC3:,.0f}")
