@@ -102,11 +102,11 @@ with st.sidebar:
 
 col1, col2, col3 = st.columns(3)
 with col1:
-st.subheader("📘 Model 1: Fixed Revenue")
+    st.subheader("📘 Model 1: Fixed Revenue")
     st.markdown(f"- **Optimum Speed:** {V1_opt:.2f} kn")
     st.caption("Speed (V) affects:")
     
-            st.markdown("""
+    st.markdown("""
     <sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
     """, unsafe_allow_html=True)
     st.markdown(f"- **Daily Profit (Z):** ${Z1_opt:,.0f}")
@@ -119,11 +119,11 @@ st.subheader("📘 Model 1: Fixed Revenue")
     st.plotly_chart(fig1, use_container_width=True)
 
 with col2:
-st.subheader("📙 Model 2: Ballast Leg")
+    st.subheader("📙 Model 2: Ballast Leg")
     st.markdown(f"- **Optimum Speed:** {V2_opt:.2f} kn")
     st.caption("Speed (V) affects:")
     
-            st.markdown("""
+    st.markdown("""
     <sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
     """, unsafe_allow_html=True)
     st.markdown(f"- **Total Cost (Z):** ${Z2_opt:,.0f}")
@@ -135,11 +135,11 @@ st.subheader("📙 Model 2: Ballast Leg")
     st.plotly_chart(fig2, use_container_width=True)
 
 with col3:
-st.subheader("📗 Model 3: Bonus/Penalty")
+    st.subheader("📗 Model 3: Bonus/Penalty")
     st.markdown(f"- **Optimum Speed:** {V3_opt:.2f} kn")
     st.caption("Speed (V) affects:")
     
-            st.markdown("""
+    st.markdown("""
     <sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
     """, unsafe_allow_html=True)
     st.markdown(f"- **Daily Profit (Z):** ${Z3_opt:,.0f}")
@@ -152,14 +152,13 @@ st.subheader("📗 Model 3: Bonus/Penalty")
     st.plotly_chart(fig3, use_container_width=True)
     
     # === Info Section ===
-
-with st.expander("ℹ️ Model Equations"):
+    
+    with st.expander("ℹ️ Model Equations"):
     st.markdown("### **Model 1 – Income-Generating**")
     st.markdown("**Daily Profit:**")
-        st.markdown("### **Model 2 – Ballast (Empty Leg)**")
+    st.markdown("### **Model 2 – Ballast (Empty Leg)**")
     st.markdown("**Total Cost:**")
-        st.markdown("**Optimal Speed:**")
-        st.markdown("### **Model 3 – Bonus/Penalty Contracts**")
+    st.markdown("**Optimal Speed:**")
+    st.markdown("### **Model 3 – Bonus/Penalty Contracts**")
     st.markdown("**Adjusted Revenue:**")
-        st.markdown("**Daily Profit:**")
-
+    st.markdown("**Daily Profit:**")
