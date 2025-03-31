@@ -95,7 +95,7 @@ OC3 = operating_cost(C, F3, Fc, Ds3)
 # === Metrics and Charts ===
 col1, col2, col3 = st.columns(3)
 
-with col1::
+with col1:
 
     st.subheader("📘 Model 1: Fixed Revenue")
     st.markdown(f"- **Optimum Speed:** {V1_opt:.2f} kn")
@@ -110,7 +110,7 @@ with col1::
     fig1.add_trace(go.Scatter(x=[V1_opt], y=[Z1_opt], mode='markers+text', name="Optimum", text=[f"{V1_opt:.2f} kn"], marker=dict(size=10, color='blue')))
     fig1.update_layout(title="Model 1: Daily Profit", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
     st.plotly_chart(fig1, use_container_width=True)
-with col2::
+with col2:
 
     st.subheader("📙 Model 2: Ballast Leg")
     st.markdown(f"- **Optimum Speed:** {V2_opt:.2f} kn")
@@ -124,7 +124,7 @@ with col2::
     fig2.add_trace(go.Scatter(x=[V2_opt], y=[Z2_opt], mode='markers+text', name="Optimum", text=[f"{V2_opt:.2f} kn"], marker=dict(size=10, color='orange')))
     fig2.update_layout(title="Model 2: Total Cost", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
     st.plotly_chart(fig2, use_container_width=True)
-with col3::
+with col3:
 
     st.subheader("📗 Model 3: Bonus/Penalty")
     st.markdown(f"- **Optimum Speed:** {V3_opt:.2f} kn")
