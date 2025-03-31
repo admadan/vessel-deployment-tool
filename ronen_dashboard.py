@@ -1,4 +1,3 @@
-
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
@@ -158,12 +157,8 @@ with col3:
     st.plotly_chart(fig3, use_container_width=True)
     
     # === Info Section ===
-    
-    
-    
-    
-with st.expander("ℹ️ Model Equations"):
-    st.markdown("### **Model 1 – Income-Generating**")
+
+with st.expander("ℹ️ Model Equations"):st.markdown("### **Model 1 – Income-Generating**")
     st.markdown("**Daily Profit:**")
     st.latex(r"Z = \frac{R - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
 
