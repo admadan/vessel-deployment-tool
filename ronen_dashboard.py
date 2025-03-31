@@ -104,8 +104,8 @@ with col1:
     st.subheader("📘 Model 1: Fixed Revenue")
     st.markdown(f"- **Optimum Speed:** {V1_opt:.2f} kn")
     st.caption("Speed (V) affects:")
-    st.latex(r"D_s = \f\frac{L}{24V}") 
-\frac{L}{24V}")
+    st.latex(r"D_s = \f 
+
     st.latex(r"F \propto V^3")
     st.latex(r"D = D_s + D_p")
     st.markdown("""
@@ -123,8 +123,8 @@ with col2:
     st.subheader("📙 Model 2: Ballast Leg")
     st.markdown(f"- **Optimum Speed:** {V2_opt:.2f} kn")
     st.caption("Speed (V) affects:")
-    st.latex(r"D_s = \f\frac{L}{24V}") 
-\frac{L}{24V}")
+    st.latex(r"D_s = \f 
+
     st.latex(r"F \propto V^3")
     st.latex(r"D = D_s + D_p")
     st.markdown("""
@@ -141,8 +141,8 @@ with col3:
     st.subheader("📗 Model 3: Bonus/Penalty")
     st.markdown(f"- **Optimum Speed:** {V3_opt:.2f} kn")
     st.caption("Speed (V) affects:")
-    st.latex(r"D_s = \f\frac{L}{24V}") 
-\frac{L}{24V}")
+    st.latex(r"D_s = \f 
+
     st.latex(r"F \propto V^3")
     st.latex(r"D = D_s + D_p")
     st.markdown("""
@@ -169,7 +169,7 @@ with st.expander("ℹ️ Model Equations"):
 
     st.markdown("### **Model 2 – Ballast (Empty Leg)**")
     st.markdown("**Total Cost:**")
-    st.latex(r"Z = \left(C_a + F_0 F_c \left(\frac{V}{V_0}\right)^3\right) \cdot \f\frac{L}{24V}")
+    st.latex(r"Z = \left(C_a + F_0 F_c \left(\frac{V}{V_0}\right)^3\right) \cdot \f
     st.markdown("**Optimal Speed:**")
     st.latex(r"V^* = V_0 \left(\frac{C_a}{2 F_0 F_c}\right)^{1/3}")
 
