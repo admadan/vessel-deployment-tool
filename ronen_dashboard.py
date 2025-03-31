@@ -51,7 +51,7 @@ with st.sidebar:
     Ca = st.number_input("Alternative Value ($/day)", value=70000.0)
 
     st.markdown("### 💰 Revenue Inputs")
-    freight_rate = st.number_input("Freight Rate ($/day)", value=100000)
+    freight_rate = st.slider("Freight Rate ($/day)", min_value=0, max_value=200000, value=100000, step=5000, format="%,d")
     assumed_speed = st.slider("Assumed Speed (knots)", 10.0, V0, 15.0)
 
     st.markdown("### 📦 Model 3 (Timing Contracts)")
@@ -108,3 +108,80 @@ else:
     st.success(f"✅ Model 3 (with timing contract) is more profitable at **{V3_opt:.2f} knots** with daily profit **${Z3_opt:,.0f}**.")
 
 st.markdown("Use the sidebar to test different freight rates, fuel prices, and contract terms. The chart updates dynamically.")
+
+
+
+with st.expander("ℹ️ About Ronen’s Speed Optimization Models"):
+    st.markdown("""
+### **Model 1: Income-Generating Leg**
+
+Used when the vessel generates **fixed freight revenue** per voyage.
+
+**Objective:** Maximize daily profit.
+
+**Daily profit formula**:
+\\[
+Z = \\frac{R - C(D_s + D_p) - F \\cdot F_c \\cdot D_s}{D_s + D_p}
+\\]
+
+Where:
+- \\( R \\): total voyage revenue ($)  
+- \\( D_s = \\frac{L}{24V} \\): sea days  
+- \\( D_p \\): port days  
+- \\( C \\): daily vessel operating cost ($)  
+- \\( F = F_0 \\left(\\frac{V}{V_0}\\right)^3 \\): fuel use at speed V  
+- \\( F_c \\): fuel price ($/ton)  
+- \\( V_0 \\): nominal speed  
+- \\( F_0 \\): fuel consumption at nominal speed
+
+**Optimization:** Solve cubic equation for \\( V \\) that maximizes \\( Z \\)
+
+---
+
+### **Model 2: Empty (Positioning) Leg**
+
+Used when there's **no revenue**, and the vessel is repositioning.
+
+**Objective:** Minimize total voyage cost.
+
+**Total cost formula**:
+\\[
+Z = D_s \\cdot C_a + F \\cdot F_c \\cdot D_s = \\left(C_a + F_0 \\cdot F_c \\cdot \\left(\\frac{V}{V_0}\\right)^3\\right) \\cdot \\frac{L}{24V}
+\\]
+
+Where:
+- \\( C_a \\): alternative daily value of ship (opportunity cost)
+
+**Optimal speed:**
+\\[
+V^* = V_0 \\left(\\frac{C_a}{2F_0F_c}\\right)^{1/3}
+\\]
+
+---
+
+### **Model 3: Bonus/Penalty Contracts**
+
+Used when contracts reward early delivery or penalize delay.
+
+**Adjusted revenue**:
+\\[
+R' = R + \\frac{K \\cdot L}{24} \\left(\\frac{1}{V_R} - \\frac{1}{V}\\right)
+\\]
+
+**Daily profit becomes:**
+\\[
+Z = \\frac{R' - C(D_s + D_p) - F \\cdot F_c \\cdot D_s}{D_s + D_p}
+\\]
+
+Where:
+- \\( K \\): penalty (if late) or bonus (if early) per day  
+- \\( V_R \\): reference contractual speed  
+- \\( R' \\): adjusted revenue
+
+**Optimization:** Solve cubic equation for \\( V \\) again.
+
+---
+
+These models are derived from:  
+📘 *Ronen, D. (1982). The effect of oil price on the optimal speed of ships. Journal of the Operational Research Society, 33(11), 1035–1040.*
+    """)
