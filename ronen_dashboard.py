@@ -51,21 +51,18 @@ with st.sidebar:
     Ca = st.number_input("Alternative Value ($/day)", value=70000.0)
 
     st.markdown("### 💰 Revenue Inputs")
-    freight_rate = st.slider("Freight Rate ($/day)", min_value=0, max_value=200000, value=100000, step=5000, format="%,d")
+    freight_rate = st.slider("Freight Rate ($/day)", min_value=0, max_value=200000, value=100000, step=5000)
     assumed_speed = st.slider("Assumed Speed (knots)", 10.0, V0, 15.0)
 
     st.markdown("### 📦 Model 3 (Timing Contracts)")
     K = st.number_input("Penalty/Bonus ($/day late/early)", value=25000)
     VR = st.number_input("Reference Speed (knots)", value=18.0)
 
-# --- Calculate Revenue from Freight Rate ---
+# --- Revenue Calculation ---
 R, voyage_days = calculate_freight_revenue(freight_rate, L, Dp, assumed_speed)
-st.markdown(f"""
-### 📈 Freight Revenue: **${R:,.0f}**
-- Based on freight rate **${freight_rate:,.0f}/day** and voyage duration **{voyage_days:.2f} days**
-""")
+st.markdown(f"### 📈 Calculated Freight Revenue: **${R:,.0f}** for {voyage_days:.2f} days")
 
-# --- Model Calculations ---
+# --- Model Computation ---
 V_range = np.linspace(10, V0, 300)
 Z1 = model1_profit_curve(V_range, R, L, Dp, V0, F0, Fc, C)
 Z2 = model2_cost_curve(V_range, Ca, V0, F0, Fc, L)
@@ -77,91 +74,72 @@ V3_opt, Z3_opt = find_optimum(V_range, Z3, 'max')
 
 # --- Plotly Chart ---
 fig = go.Figure()
+fig.add_trace(go.Scatter(x=V_range, y=Z1, name="Model 1: Daily Profit", line=dict(color='blue')))
+fig.add_trace(go.Scatter(x=V_range, y=Z3, name="Model 3: Profit (Bonus/Penalty)", line=dict(color='green', dash='dash')))
+fig.add_trace(go.Scatter(x=V_range, y=Z2, name="Model 2: Total Cost", line=dict(color='orange', dash='dot')))
+fig.add_hline(y=Ca, line=dict(color='red', dash='dot'), annotation_text="Alternative Daily Value")
 
-fig.add_trace(go.Scatter(x=V_range, y=Z1, mode='lines', name='Model 1: Daily Profit', line=dict(color='blue')))
-fig.add_trace(go.Scatter(x=V_range, y=Z3, mode='lines', name='Model 3: Daily Profit (Bonus/Penalty)', line=dict(color='green', dash='dash')))
-fig.add_trace(go.Scatter(x=V_range, y=Z2, mode='lines', name='Model 2: Total Cost', line=dict(color='orange', dash='dot')))
-fig.add_hline(y=Ca, line=dict(color='red', dash='dot'), annotation_text="Alternative Daily Value", annotation_position="top left")
-
-fig.add_trace(go.Scatter(x=[V1_opt], y=[Z1_opt], mode='markers+text', name='Model 1 Opt', text=[f"{V1_opt:.2f} kn"], textposition="top center", marker=dict(size=10, color='blue')))
-fig.add_trace(go.Scatter(x=[V3_opt], y=[Z3_opt], mode='markers+text', name='Model 3 Opt', text=[f"{V3_opt:.2f} kn"], textposition="top center", marker=dict(size=10, color='green')))
-fig.add_trace(go.Scatter(x=[V2_opt], y=[Z2_opt], mode='markers+text', name='Model 2 Opt', text=[f"{V2_opt:.2f} kn"], textposition="top center", marker=dict(size=10, color='orange')))
+fig.add_trace(go.Scatter(x=[V1_opt], y=[Z1_opt], mode='markers+text', name="Model 1 Opt", text=[f"{V1_opt:.2f} kn"], marker=dict(size=10, color='blue')))
+fig.add_trace(go.Scatter(x=[V2_opt], y=[Z2_opt], mode='markers+text', name="Model 2 Opt", text=[f"{V2_opt:.2f} kn"], marker=dict(size=10, color='orange')))
+fig.add_trace(go.Scatter(x=[V3_opt], y=[Z3_opt], mode='markers+text', name="Model 3 Opt", text=[f"{V3_opt:.2f} kn"], marker=dict(size=10, color='green')))
 
 fig.update_layout(
-    title="📊 Daily Profit / Cost vs Speed (Ronen Models)",
+    title="📊 Profit / Cost vs Speed (All Ronen Models)",
     xaxis_title="Speed (knots)",
     yaxis_title="Daily Profit or Cost ($)",
-    template='plotly_white',
-    hovermode='x unified',
-    height=600
+    template="plotly_white",
+    hovermode="x unified"
 )
 
 st.plotly_chart(fig, use_container_width=True)
 
-# --- Business Recommendation ---
+# --- Business Logic ---
 st.subheader("💡 Recommendation")
 if Z1_opt < Ca and Z3_opt < Ca:
-    st.error("⚠️ Daily profit from both Model 1 and Model 3 is less than the ship's alternative value. Use Model 2 (cost minimization).")
+    st.error("⚠️ Model 1 & Model 3 profit both below alternative value. Use Model 2 for minimum cost.")
 elif Z1_opt > Z3_opt:
-    st.success(f"✅ Model 1 is more profitable at **{V1_opt:.2f} knots** with daily profit **${Z1_opt:,.0f}**.")
+    st.success(f"✅ Model 1 is optimal at **{V1_opt:.2f} knots** (Z = ${Z1_opt:,.0f})")
 else:
-    st.success(f"✅ Model 3 (with timing contract) is more profitable at **{V3_opt:.2f} knots** with daily profit **${Z3_opt:,.0f}**.")
+    st.success(f"✅ Model 3 (bonus/penalty) is optimal at **{V3_opt:.2f} knots** (Z = ${Z3_opt:,.0f})")
 
-st.markdown("Use the sidebar to test different freight rates, fuel prices, and contract terms. The chart updates dynamically.")
-
-
+# --- Info Section ---
 with st.expander("ℹ️ About Ronen’s Speed Optimization Models"):
     st.markdown(r"""
 ### **Model 1: Income-Generating Leg**
+Maximize daily profit when voyage generates fixed revenue.
 
-Used when the vessel generates **fixed freight revenue**.
-
-**Objective:** Maximize daily profit.
-
-**Daily profit**:
+**Equation**:
 $$
 Z = \frac{R - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}
 $$
 
-Where:
-- \( D_s = \frac{L}{24V} \)
-- \( F = F_0 \left(\frac{V}{V_0}\right)^3 \)
-
 ---
 
 ### **Model 2: Empty (Positioning) Leg**
+Minimize total cost when no freight is earned.
 
-Used when there's **no revenue** (ballast leg).
-
-**Objective:** Minimize total cost.
-
-**Total cost**:
+**Cost**:
 $$
-Z = \left(C_a + F_0 \cdot F_c \cdot \left(\frac{V}{V_0}\right)^3\right) \cdot \frac{L}{24V}
+Z = \left(C_a + F_0 F_c \left(\frac{V}{V_0}\right)^3\right) \cdot \frac{L}{24V}
 $$
 
-**Optimal speed**:
+**Optimal Speed**:
 $$
 V^* = V_0 \cdot \left(\frac{C_a}{2F_0F_c}\right)^{1/3}
 $$
 
 ---
 
-### **Model 3: Speed-Linked Revenue (Bonus/Penalty)**
+### **Model 3: Bonus/Penalty Contracts**
+Revenue depends on early/late arrival vs reference speed.
 
-Used when contracts reward early/penalize late arrival.
-
-**Adjusted revenue**:
+**Adjusted Revenue**:
 $$
-R' = R + \frac{K \cdot L}{24} \left(\frac{1}{V_R} - \frac{1}{V}\right)
+R' = R + \frac{K L}{24} \left(\frac{1}{V_R} - \frac{1}{V}\right)
 $$
 
-**Daily profit**:
+**Profit**:
 $$
 Z = \frac{R' - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}
 $$
-
----
-
-📘 *Source: Ronen, D. (1982). The effect of oil price on the optimal speed of ships.*
-""")
+    """)
