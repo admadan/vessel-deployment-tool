@@ -49,6 +49,11 @@ with st.sidebar:
 
     L = st.number_input("Voyage Distance (nm)", value=4000)
     Dp = st.number_input("Port Days", value=2.0)
+st.markdown("### ℹ️ Speed Inputs Explained")
+st.markdown("- **V₀ (Reference Speed):** Used to estimate fuel consumption using cube law.")
+st.markdown("- **Vm (Minimum Speed):** Used as the lower bound in optimization.")
+st.markdown("- **Assumed Speed:** Used to calculate revenue from freight/day × voyage days.")
+st.markdown("- **VR (Reference Speed for Bonus):** Used in Model 3 to calculate bonus/penalty for early/late arrival.")
 
     V0 = st.slider("Reference Speed (V0) [knots]", 0.0, 25.0, 19.0)
     F0 = st.slider("Main Engine Fuel/day at V0 (tons)", 50.0, 300.0, 120.0)
