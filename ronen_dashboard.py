@@ -152,13 +152,23 @@ with col3:
     st.plotly_chart(fig3, use_container_width=True)
     
     # === Info Section ===
-
+    
+    
+    
+    
 with st.expander("ℹ️ Model Equations"):
     st.markdown("### **Model 1 – Income-Generating**")
     st.markdown("**Daily Profit:**")
+    st.latex(r"Z = \frac{R - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
+
     st.markdown("### **Model 2 – Ballast (Empty Leg)**")
     st.markdown("**Total Cost:**")
+    st.latex(r"Z = \left(C_a + F_0 F_c \left(\frac{V}{V_0}\right)^3\right) \cdot \frac{L}{24V}")
     st.markdown("**Optimal Speed:**")
+    st.latex(r"V^* = V_0 \left(\frac{C_a}{2 F_0 F_c}\right)^{1/3}")
+
     st.markdown("### **Model 3 – Bonus/Penalty Contracts**")
     st.markdown("**Adjusted Revenue:**")
+    st.latex(r"R' = R + \frac{K L}{24} \left(\frac{1}{V_R} - \frac{1}{V}\right)")
     st.markdown("**Daily Profit:**")
+    st.latex(r"Z = \frac{R' - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
