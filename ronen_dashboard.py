@@ -147,12 +147,12 @@ with col3::
     with st.expander("ℹ️ Model Equations"):
     st.markdown("### **Model 1 – Income-Generating**")
     st.markdown("**Daily Profit:**")
-    st.latex(r"Z =
+    st.latex(r"Z = \frac{R - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
     rac{R - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
 
     st.markdown("### **Model 2 – Ballast (Empty Leg)**")
     st.markdown("**Total Cost:**")
-    st.latex(r"Z = \left(C_a + F_0 F_c \left(
+    st.latex(r"Z = \frac{R - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}") \left(C_a + F_0 F_c \left(
     rac{V}{V_0}
     ight)^3
     ight) \cdot
@@ -170,5 +170,5 @@ with col3::
     rac{1}{V}
     ight)")
     st.markdown("**Daily Profit:**")
-    st.latex(r"Z =
+    st.latex(r"Z = \frac{R - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
     rac{R' - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
