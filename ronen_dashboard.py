@@ -1,8 +1,8 @@
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
-# --- Calculation Functions ---
+# --- Model Calculation Functions ---
 def calculate_freight_revenue(freight_rate_per_day, L, Dp, V):
     sea_days = L / (24 * V)
     total_days = sea_days + Dp
@@ -10,74 +10,59 @@ def calculate_freight_revenue(freight_rate_per_day, L, Dp, V):
     return revenue, total_days
 
 def model1_profit_curve(V_range, R, L, Dp, V0, F0, Fc, C):
-    Z = []
-    for V in V_range:
-        Ds = L / (24 * V)
-        D = Ds + Dp
-        F = F0 * (V / V0) ** 3
-        total_cost = C * D + F * Fc * Ds
-        profit = R - total_cost
-        Z.append(profit / D)
-    return Z
+    return [
+        (R - (C * (Dp + L / (24 * V)) + F0 * (V / V0) ** 3 * Fc * L / (24 * V))) / (Dp + L / (24 * V))
+        for V in V_range
+    ]
 
 def model2_cost_curve(V_range, Ca, V0, F0, Fc, L):
-    Z = []
-    for V in V_range:
-        Ds = L / (24 * V)
-        F = F0 * (V / V0) ** 3
-        Z.append((Ca + F * Fc) * Ds)
-    return Z
+    return [
+        (Ca + F0 * (V / V0) ** 3 * Fc) * L / (24 * V)
+        for V in V_range
+    ]
 
 def model3_profit_curve(V_range, R, K, L, Dp, V0, F0, Fc, C, VR):
-    Z = []
-    for V in V_range:
-        Ds = L / (24 * V)
-        D = Ds + Dp
-        bonus_penalty = (K * L / 24) * (1 / VR - 1 / V)
-        adjusted_R = R + bonus_penalty
-        F = F0 * (V / V0) ** 3
-        total_cost = C * D + F * Fc * Ds
-        profit = adjusted_R - total_cost
-        Z.append(profit / D)
-    return Z
+    return [
+        (
+            (R + (K * L / 24) * (1 / VR - 1 / V)) -
+            (C * (Dp + L / (24 * V)) + F0 * (V / V0) ** 3 * Fc * L / (24 * V))
+        ) / (Dp + L / (24 * V))
+        for V in V_range
+    ]
 
-def find_optimum(V_range, Z, mode='max'):
-    Z = np.array(Z)
-    idx = np.argmax(Z) if mode == 'max' else np.argmin(Z)
-    return V_range[idx], Z[idx]
+def find_optimum(V_range, Z_curve, mode='max'):
+    Z_array = np.array(Z_curve)
+    idx = np.argmax(Z_array) if mode == 'max' else np.argmin(Z_array)
+    return V_range[idx], Z_array[idx]
 
-# --- Streamlit App ---
-st.set_page_config(page_title="Ronen Optimal Speed Dashboard", layout="wide")
-st.title("🚢 Ronen's Optimal Speed Dashboard")
-st.markdown("Analyze optimal vessel speed based on different freight rates and voyage conditions.")
+# --- Streamlit App Layout ---
+st.set_page_config(page_title="Ronen Speed Models (Plotly)", layout="wide")
+st.title("🚢 Ronen Optimal Speed Dashboard (Interactive with Plotly)")
 
 # --- Sidebar Inputs ---
 with st.sidebar:
-    st.header("User Inputs")
+    st.header("📌 Input Parameters")
     L = st.number_input("Voyage Distance (nm)", value=4000)
     V0 = st.number_input("Nominal Speed (knots)", value=19.0)
     F0 = st.number_input("Fuel Consumption @ V0 (tons/day)", value=120.0)
     Fc = st.number_input("Fuel Cost ($/ton)", value=800.0)
     Dp = st.number_input("Port Days", value=2)
-    C = st.number_input("Daily Operating Cost ($)", value=12000.0)
-    Ca = st.number_input("Alternative Daily Value of Ship ($)", value=70000.0)
+    C = st.number_input("Operating Cost ($/day)", value=12000.0)
+    Ca = st.number_input("Alternative Value ($/day)", value=70000.0)
 
-    st.markdown("### Freight & Revenue Settings")
+    st.markdown("### 💰 Revenue Inputs")
     freight_rate = st.number_input("Freight Rate ($/day)", value=100000)
-    assumed_speed = st.slider("Assumed Speed for Revenue Calculation (knots)", min_value=10.0, max_value=V0, value=15.0)
+    assumed_speed = st.slider("Assumed Speed (knots)", 10.0, V0, 15.0)
 
-    st.markdown("### Model 3 Settings")
-    K = st.number_input("Penalty/Bonus per Day ($)", value=25000)
-    VR = st.number_input("Reference Speed for Penalty/Bonus (knots)", value=18.0)
+    st.markdown("### 📦 Model 3 (Timing Contracts)")
+    K = st.number_input("Penalty/Bonus ($/day late/early)", value=25000)
+    VR = st.number_input("Reference Speed (knots)", value=18.0)
 
-# --- Calculated Revenue ---
+# --- Calculate Revenue from Freight Rate ---
 R, voyage_days = calculate_freight_revenue(freight_rate, L, Dp, assumed_speed)
 st.markdown(f"""
-### 📦 Freight Revenue Calculated
-- Freight Rate: **${freight_rate:,.0f}/day**
-- Assumed Speed: **{assumed_speed:.2f} knots**
-- Voyage Duration: **{voyage_days:.2f} days**
-- **Total Revenue: ${R:,.0f}**
+### 📈 Freight Revenue: **${R:,.0f}**
+- Based on freight rate **${freight_rate:,.0f}/day** and voyage duration **{voyage_days:.2f} days**
 """)
 
 # --- Model Calculations ---
@@ -90,33 +75,36 @@ V1_opt, Z1_opt = find_optimum(V_range, Z1, 'max')
 V2_opt, Z2_opt = find_optimum(V_range, Z2, 'min')
 V3_opt, Z3_opt = find_optimum(V_range, Z3, 'max')
 
-# --- Central Graph ---
-st.markdown("### 📊 Interactive Comparison of All Models")
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(V_range, Z1, label="Model 1: Daily Profit", color='blue')
-ax.plot(V_range, Z3, label="Model 3: Profit w/ Bonus/Penalty", linestyle='--', color='green')
-ax.plot(V_range, Z2, label="Model 2: Total Cost", linestyle=':', color='orange')
-ax.axhline(Ca, color='red', linestyle='-.', label=f"Alternative Value (${Ca:,.0f})")
+# --- Plotly Chart ---
+fig = go.Figure()
 
-# Mark optimal points
-ax.plot(V1_opt, Z1_opt, 'o', color='blue', label=f"Model 1 Opt: {V1_opt:.2f} kn")
-ax.plot(V2_opt, Z2_opt, 'o', color='orange', label=f"Model 2 Opt: {V2_opt:.2f} kn")
-ax.plot(V3_opt, Z3_opt, 'o', color='green', label=f"Model 3 Opt: {V3_opt:.2f} kn")
+fig.add_trace(go.Scatter(x=V_range, y=Z1, mode='lines', name='Model 1: Daily Profit', line=dict(color='blue')))
+fig.add_trace(go.Scatter(x=V_range, y=Z3, mode='lines', name='Model 3: Daily Profit (Bonus/Penalty)', line=dict(color='green', dash='dash')))
+fig.add_trace(go.Scatter(x=V_range, y=Z2, mode='lines', name='Model 2: Total Cost', line=dict(color='orange', dash='dot')))
+fig.add_hline(y=Ca, line=dict(color='red', dash='dot'), annotation_text="Alternative Daily Value", annotation_position="top left")
 
-ax.set_title("Daily Profit / Cost vs Speed")
-ax.set_xlabel("Speed (knots)")
-ax.set_ylabel("Daily Profit or Cost ($)")
-ax.grid(True)
-ax.legend()
-st.pyplot(fig)
+fig.add_trace(go.Scatter(x=[V1_opt], y=[Z1_opt], mode='markers+text', name='Model 1 Opt', text=[f"{V1_opt:.2f} kn"], textposition="top center", marker=dict(size=10, color='blue')))
+fig.add_trace(go.Scatter(x=[V3_opt], y=[Z3_opt], mode='markers+text', name='Model 3 Opt', text=[f"{V3_opt:.2f} kn"], textposition="top center", marker=dict(size=10, color='green')))
+fig.add_trace(go.Scatter(x=[V2_opt], y=[Z2_opt], mode='markers+text', name='Model 2 Opt', text=[f"{V2_opt:.2f} kn"], textposition="top center", marker=dict(size=10, color='orange')))
 
-# --- Recommendations ---
-st.markdown("### ✅ Recommendations & Interpretation")
+fig.update_layout(
+    title="📊 Daily Profit / Cost vs Speed (Ronen Models)",
+    xaxis_title="Speed (knots)",
+    yaxis_title="Daily Profit or Cost ($)",
+    template='plotly_white',
+    hovermode='x unified',
+    height=600
+)
+
+st.plotly_chart(fig, use_container_width=True)
+
+# --- Business Recommendation ---
+st.subheader("💡 Recommendation")
 if Z1_opt < Ca and Z3_opt < Ca:
-    st.error("Daily profit from both Model 1 and Model 3 is less than the ship's alternative value. Use Model 2 (cost minimization).")
+    st.error("⚠️ Daily profit from both Model 1 and Model 3 is less than the ship's alternative value. Use Model 2 (cost minimization).")
 elif Z1_opt > Z3_opt:
-    st.success(f"Model 1 is more profitable at {V1_opt:.2f} knots (Z: ${Z1_opt:,.0f}).")
+    st.success(f"✅ Model 1 is more profitable at **{V1_opt:.2f} knots** with daily profit **${Z1_opt:,.0f}**.")
 else:
-    st.success(f"Model 3 is more profitable at {V3_opt:.2f} knots (Z: ${Z3_opt:,.0f}).")
+    st.success(f"✅ Model 3 (with timing contract) is more profitable at **{V3_opt:.2f} knots** with daily profit **${Z3_opt:,.0f}**.")
 
-st.markdown("Use the sidebar to change freight rate, vessel speed, and see how optimal speed and profits respond dynamically.")
+st.markdown("Use the sidebar to test different freight rates, fuel prices, and contract terms. The chart updates dynamically.")
