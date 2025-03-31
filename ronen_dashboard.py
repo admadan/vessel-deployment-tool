@@ -46,65 +46,66 @@ st.title("🚢 Ronen Optimal Speed Dashboard – Final Version")
 # === Inputs ===
 with st.sidebar:
     st.header("Input Parameters")
-
+    
     L = st.number_input("Voyage Distance (nm)", value=4000)
     Dp = st.number_input("Port Days", value=2.0)
-st.markdown("### ℹ️ Speed Inputs Explained")
-st.markdown("- **V₀ (Reference Speed):** Used to estimate fuel consumption using cube law.")
-st.markdown("- **Vm (Minimum Speed):** Used as the lower bound in optimization.")
-st.markdown("- **Assumed Speed:** Used to calculate revenue from freight/day × voyage days.")
-st.markdown("- **VR (Reference Speed for Bonus):** Used in Model 3 to calculate bonus/penalty for early/late arrival.")
-
+    st.markdown("### ℹ️ Speed Inputs Explained")
+    st.markdown("- **V₀ (Reference Speed):** Used to estimate fuel consumption using cube law.")
+    st.markdown("- **Vm (Minimum Speed):** Used as the lower bound in optimization.")
+    st.markdown("- **Assumed Speed:** Used to calculate revenue from freight/day × voyage days.")
+    st.markdown("- **VR (Reference Speed for Bonus):** Used in Model 3 to calculate bonus/penalty for early/late arrival.")
+    
     V0 = st.slider("Reference Speed (V0) [knots]", 0.0, 25.0, 19.0)
     F0 = st.slider("Main Engine Fuel/day at V0 (tons)", 50.0, 300.0, 120.0)
     Fc = st.slider("Fuel Cost ($/ton)", 200, 1200, 800)
     C = st.slider("Daily Ops Cost ($)", 5000, 50000, 12000)
     Vm = st.slider("Minimum Speed Vm [knots]", 0.0, 15.0, 10.0)
-
+    
     freight_rate = st.slider("Freight Rate ($/day)", 0, 200000, 100000, step=5000)
     assumed_speed = st.slider("Assumed Speed for Revenue [knots]", 0.0, V0, 15.0)
-
+    
     Ca = st.slider("Alternative Value of Ship ($/day)", 20000, 100000, 70000)
     K = st.slider("Bonus/Penalty per day ($)", 0, 50000, 25000)
     VR = st.slider("Reference Contract Speed (VR) [knots]", 0.0, 25.0, 18.0)
-
-# === Calculations ===
-V_range = np.linspace(Vm, V0, 300)
-R, Ds_assumed, D_assumed = calculate_freight_revenue(freight_rate, L, Dp, assumed_speed)
-
-Z1 = model1_profit_curve(V_range, R, L, Dp, V0, F0, Fc, C)
-Z2 = model2_cost_curve(V_range, Ca, V0, F0, Fc, L)
-Z3 = model3_profit_curve(V_range, R, K, L, Dp, V0, F0, Fc, C, VR)
-
-V1_opt, Z1_opt = find_optimum(V_range, Z1)
-V2_opt, Z2_opt = find_optimum(V_range, Z2, mode='min')
-V3_opt, Z3_opt = find_optimum(V_range, Z3)
-
-# Model 1
-Ds1, D1 = L / (24 * V1_opt), Dp + L / (24 * V1_opt)
-F1 = fuel_at_speed(F0, V1_opt, V0)
-P1 = Z1_opt * D1
-OC1 = operating_cost(C, F1, Fc, Ds1)
-
-# Model 2
-Ds2, D2 = L / (24 * V2_opt), Dp + L / (24 * V2_opt)
-F2 = fuel_at_speed(F0, V2_opt, V0)
-OC2 = operating_cost(Ca, F2, Fc, Ds2)
-
-# Model 3
-Ds3, D3 = L / (24 * V3_opt), Dp + L / (24 * V3_opt)
-F3 = fuel_at_speed(F0, V3_opt, V0)
-P3 = Z3_opt * D3
-OC3 = operating_cost(C, F3, Fc, Ds3)
-
-# === Metrics and Charts ===
-col1, col2, col3 = st.columns(3)
-
+    
+    # === Calculations ===
+    V_range = np.linspace(Vm, V0, 300)
+    R, Ds_assumed, D_assumed = calculate_freight_revenue(freight_rate, L, Dp, assumed_speed)
+    
+    Z1 = model1_profit_curve(V_range, R, L, Dp, V0, F0, Fc, C)
+    Z2 = model2_cost_curve(V_range, Ca, V0, F0, Fc, L)
+    Z3 = model3_profit_curve(V_range, R, K, L, Dp, V0, F0, Fc, C, VR)
+    
+    V1_opt, Z1_opt = find_optimum(V_range, Z1)
+    V2_opt, Z2_opt = find_optimum(V_range, Z2, mode='min')
+    V3_opt, Z3_opt = find_optimum(V_range, Z3)
+    
+    # Model 1
+    Ds1, D1 = L / (24 * V1_opt), Dp + L / (24 * V1_opt)
+    F1 = fuel_at_speed(F0, V1_opt, V0)
+    P1 = Z1_opt * D1
+    OC1 = operating_cost(C, F1, Fc, Ds1)
+    
+    # Model 2
+    Ds2, D2 = L / (24 * V2_opt), Dp + L / (24 * V2_opt)
+    F2 = fuel_at_speed(F0, V2_opt, V0)
+    OC2 = operating_cost(Ca, F2, Fc, Ds2)
+    
+    # Model 3
+    Ds3, D3 = L / (24 * V3_opt), Dp + L / (24 * V3_opt)
+    F3 = fuel_at_speed(F0, V3_opt, V0)
+    P3 = Z3_opt * D3
+    OC3 = operating_cost(C, F3, Fc, Ds3)
+    
+    # === Metrics and Charts ===
+    col1, col2, col3 = st.columns(3)
+    
 with col1:
     st.subheader("📘 Model 1: Fixed Revenue")
     st.markdown(f"- **Optimum Speed:** {V1_opt:.2f} kn")
     st.caption("Speed (V) affects:")
-    st.latex(r"D_s = rac{L}{24V}")
+    st.latex(r"D_s = 
+rac{L}{24V}")
     st.latex(r"F \propto V^3")
     st.latex(r"D = D_s + D_p")
     st.markdown("""
@@ -122,7 +123,8 @@ with col2:
     st.subheader("📙 Model 2: Ballast Leg")
     st.markdown(f"- **Optimum Speed:** {V2_opt:.2f} kn")
     st.caption("Speed (V) affects:")
-    st.latex(r"D_s = rac{L}{24V}")
+    st.latex(r"D_s = 
+rac{L}{24V}")
     st.latex(r"F \propto V^3")
     st.latex(r"D = D_s + D_p")
     st.markdown("""
@@ -139,7 +141,8 @@ with col3:
     st.subheader("📗 Model 3: Bonus/Penalty")
     st.markdown(f"- **Optimum Speed:** {V3_opt:.2f} kn")
     st.caption("Speed (V) affects:")
-    st.latex(r"D_s = rac{L}{24V}")
+    st.latex(r"D_s = 
+rac{L}{24V}")
     st.latex(r"F \propto V^3")
     st.latex(r"D = D_s + D_p")
     st.markdown("""
