@@ -133,7 +133,6 @@ with col3:
 # === Info Section ===
 
 
-
 with st.expander("ℹ️ Model Equations"):
     st.markdown("### **Model 1 – Income-Generating**")
     st.markdown("**Daily Profit:**")
