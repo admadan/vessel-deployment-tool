@@ -3,10 +3,22 @@ import numpy as np
 import pandas as pd
 import json
 
+st.markdown(
+    """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 st.set_page_config(page_title="LNG 10-Vessel Deployment Tool", layout="wide")
 
 if 'loaded_data' not in st.session_state:
     st.session_state.loaded_data = {}
+
 
 def get_value(key, default):
     return st.session_state.loaded_data.get(key, default)
