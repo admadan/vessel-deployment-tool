@@ -99,15 +99,14 @@ with st.sidebar:
     # === Metrics and Charts ===
     col1, col2, col3 = st.columns(3)
     
+
+col1, col2, col3 = st.columns(3)
 with col1:
-    st.subheader("📘 Model 1: Fixed Revenue")
+st.subheader("📘 Model 1: Fixed Revenue")
     st.markdown(f"- **Optimum Speed:** {V1_opt:.2f} kn")
     st.caption("Speed (V) affects:")
-    st.latex(r"D_s = rac{L}{24V}")
-
-    st.latex(r"F \propto V^3")
-    st.latex(r"D = D_s + D_p")
-    st.markdown("""
+    
+            st.markdown("""
     <sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
     """, unsafe_allow_html=True)
     st.markdown(f"- **Daily Profit (Z):** ${Z1_opt:,.0f}")
@@ -118,15 +117,13 @@ with col1:
     fig1.add_trace(go.Scatter(x=[V1_opt], y=[Z1_opt], mode='markers+text', name="Optimum", text=[f"{V1_opt:.2f} kn"], marker=dict(size=10, color='blue')))
     fig1.update_layout(title="Model 1: Daily Profit", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
     st.plotly_chart(fig1, use_container_width=True)
+
 with col2:
-    st.subheader("📙 Model 2: Ballast Leg")
+st.subheader("📙 Model 2: Ballast Leg")
     st.markdown(f"- **Optimum Speed:** {V2_opt:.2f} kn")
     st.caption("Speed (V) affects:")
-    st.latex(r"D_s = rac{L}{24V}")
-
-    st.latex(r"F \propto V^3")
-    st.latex(r"D = D_s + D_p")
-    st.markdown("""
+    
+            st.markdown("""
     <sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
     """, unsafe_allow_html=True)
     st.markdown(f"- **Total Cost (Z):** ${Z2_opt:,.0f}")
@@ -136,15 +133,13 @@ with col2:
     fig2.add_trace(go.Scatter(x=[V2_opt], y=[Z2_opt], mode='markers+text', name="Optimum", text=[f"{V2_opt:.2f} kn"], marker=dict(size=10, color='orange')))
     fig2.update_layout(title="Model 2: Total Cost", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
     st.plotly_chart(fig2, use_container_width=True)
+
 with col3:
-    st.subheader("📗 Model 3: Bonus/Penalty")
+st.subheader("📗 Model 3: Bonus/Penalty")
     st.markdown(f"- **Optimum Speed:** {V3_opt:.2f} kn")
     st.caption("Speed (V) affects:")
-    st.latex(r"D_s = rac{L}{24V}")
-
-    st.latex(r"F \propto V^3")
-    st.latex(r"D = D_s + D_p")
-    st.markdown("""
+    
+            st.markdown("""
     <sub>Speed (V) affects sea days \(D_s = \frac{L}{24V}\), fuel use \(F \propto V^3\), and voyage time \(D = D_s + D_p\)</sub>
     """, unsafe_allow_html=True)
     st.markdown(f"- **Daily Profit (Z):** ${Z3_opt:,.0f}")
@@ -161,14 +156,10 @@ with col3:
 with st.expander("ℹ️ Model Equations"):
     st.markdown("### **Model 1 – Income-Generating**")
     st.markdown("**Daily Profit:**")
-    st.latex(r"Z = \frac{R - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
-    st.markdown("### **Model 2 – Ballast (Empty Leg)**")
+        st.markdown("### **Model 2 – Ballast (Empty Leg)**")
     st.markdown("**Total Cost:**")
-    st.latex(r"Z = \left(C_a + F_0 F_c \left(\frac{V}{V_0}\right)^3\right) \cdot \frac{L}{24V}")
-    st.markdown("**Optimal Speed:**")
-    st.latex(r"V^* = V_0 \left(\frac{C_a}{2 F_0 F_c}\right)^{1/3}")
-    st.markdown("### **Model 3 – Bonus/Penalty Contracts**")
+        st.markdown("**Optimal Speed:**")
+        st.markdown("### **Model 3 – Bonus/Penalty Contracts**")
     st.markdown("**Adjusted Revenue:**")
-    st.latex(r"R' = R + \frac{K L}{24} \left(\frac{1}{V_R} - \frac{1}{V}\right)")
-    st.markdown("**Daily Profit:**")
-    st.latex(r"Z = \frac{R' - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
+        st.markdown("**Daily Profit:**")
+
