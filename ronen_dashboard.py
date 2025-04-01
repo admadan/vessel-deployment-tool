@@ -95,10 +95,10 @@ with col1:
     fig1.add_trace(go.Scatter(x=V_range, y=Z1, name="Model 1", line=dict(color='blue')))
     fig1.add_vline(x=V1_opt, line_dash='dash', line_color='blue')
     
-fig1.add_vline(x=V1_opt, line_dash='dash', line_color='blue')
-fig1.add_annotation(x=V1_opt, y=Z1_opt, text=f"Zopt: ${Z1_opt:,.0f}", showarrow=True, arrowhead=1)
-fig1.add_annotation(x=assumed_speed, y=Z1_assumed, text=f"Zassumed: ${Z1_assumed:,.0f}", showarrow=True, arrowhead=2)
-fig1.update_layout(title="Model 1: Daily Profit", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
+    fig1.add_vline(x=V1_opt, line_dash='dash', line_color='blue')
+    fig1.add_annotation(x=V1_opt, y=Z1_opt, text=f"Zopt: ${Z1_opt:,.0f}", showarrow=True, arrowhead=1)
+    fig1.add_annotation(x=assumed_speed, y=Z1_assumed, text=f"Zassumed: ${Z1_assumed:,.0f}", showarrow=True, arrowhead=2)
+    fig1.update_layout(title="Model 1: Daily Profit", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
     st.plotly_chart(fig1, use_container_width=True)
 
 with col2:
