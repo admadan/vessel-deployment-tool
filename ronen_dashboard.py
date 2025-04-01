@@ -148,3 +148,10 @@ with st.expander("ℹ️ Model Equations"):
     st.latex(r"R' = R + \frac{K L}{24} \left(\frac{1}{V_R} - \frac{1}{V}\right)")
     st.markdown("**Daily Profit:**")
     st.latex(r"Z = \frac{R' - C(D_s + D_p) - F \cdot F_c \cdot D_s}{D_s + D_p}")
+
+    st.markdown("### 💡 Savings Logic")
+    st.markdown("**Model 1 & 3 (Profit):**")
+    st.latex(r"\text{Savings} = (Z_{\text{opt}} - Z_{\text{assumed}}) \times (D_s + D_p)")
+    st.markdown("**Model 2 (Cost):**")
+    st.latex(r"\text{Savings} = Z_{\text{assumed}} - Z_{\text{opt}}")
+
