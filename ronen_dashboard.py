@@ -1,4 +1,5 @@
 
+
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
@@ -90,6 +91,7 @@ with col1:
     st.markdown(f"- **Total Profit:** ${P1:,.0f}")
     st.markdown(f"- **Total Op Cost:** ${OC1:,.0f}")
     st.markdown(f"- **% Improvement:** {(Z1_opt - Z1_assumed)/Z1_assumed*100:.2f}%")
+    st.markdown(f"- **Savings:** ${(Z1_opt - Z1_assumed) * (Dp + Ds1):,.0f}")
     fig1 = go.Figure()
     fig1.add_trace(go.Scatter(x=V_range, y=Z1, name="Model 1", line=dict(color='blue')))
     fig1.update_layout(title="Model 1: Daily Profit", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
@@ -104,6 +106,7 @@ with col2:
     st.markdown(f"- **Total Cost (Z):** ${Z2_opt:,.0f}")
     st.markdown(f"- **Total Op Cost:** ${OC2:,.0f}")
     st.markdown(f"- **% Cost Reduction:** {(Z2_assumed - Z2_opt)/Z2_assumed*100:.2f}%")
+    st.markdown(f"- **Savings:** ${(Z2_assumed - Z2_opt):,.0f}")
     fig2 = go.Figure()
     fig2.add_trace(go.Scatter(x=V_range, y=Z2, name="Model 2", line=dict(color='orange')))
     fig2.update_layout(title="Model 2: Total Cost", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
@@ -120,6 +123,7 @@ with col3:
     st.markdown(f"- **Total Profit:** ${P3:,.0f}")
     st.markdown(f"- **Total Op Cost:** ${OC3:,.0f}")
     st.markdown(f"- **% Improvement:** {(Z3_opt - Z3_assumed)/Z3_assumed*100:.2f}%")
+    st.markdown(f"- **Savings:** ${(Z3_opt - Z3_assumed) * (Dp + Ds3):,.0f}")
     fig3 = go.Figure()
     fig3.add_trace(go.Scatter(x=V_range, y=Z3, name="Model 3", line=dict(color='green')))
     fig3.update_layout(title="Model 3: Profit with Bonus/Penalty", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
