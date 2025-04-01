@@ -1,5 +1,4 @@
 
-
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
@@ -94,6 +93,7 @@ with col1:
     st.markdown(f"- **Savings:** ${(Z1_opt - Z1_assumed) * (Dp + Ds1):,.0f}")
     fig1 = go.Figure()
     fig1.add_trace(go.Scatter(x=V_range, y=Z1, name="Model 1", line=dict(color='blue')))
+    fig1.add_vline(x=V1_opt, line_dash='dash', line_color='blue')
     fig1.update_layout(title="Model 1: Daily Profit", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
     st.plotly_chart(fig1, use_container_width=True)
 
@@ -109,6 +109,7 @@ with col2:
     st.markdown(f"- **Savings:** ${(Z2_assumed - Z2_opt):,.0f}")
     fig2 = go.Figure()
     fig2.add_trace(go.Scatter(x=V_range, y=Z2, name="Model 2", line=dict(color='orange')))
+    fig2.add_vline(x=V2_opt, line_dash='dash', line_color='orange')
     fig2.update_layout(title="Model 2: Total Cost", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
     st.plotly_chart(fig2, use_container_width=True)
 
@@ -126,9 +127,9 @@ with col3:
     st.markdown(f"- **Savings:** ${(Z3_opt - Z3_assumed) * (Dp + Ds3):,.0f}")
     fig3 = go.Figure()
     fig3.add_trace(go.Scatter(x=V_range, y=Z3, name="Model 3", line=dict(color='green')))
+    fig3.add_vline(x=V3_opt, line_dash='dash', line_color='green')
     fig3.update_layout(title="Model 3: Profit with Bonus/Penalty", xaxis_title="Speed (knots)", yaxis_title="Z ($/day)", template="plotly_white")
     st.plotly_chart(fig3, use_container_width=True)
-
 
 # === Info Section ===
 
