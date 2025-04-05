@@ -1,9 +1,9 @@
-# Let's generate the fully integrated dashboard script with LSTM model prediction
-# for the user-selected column in the "LNG Market" section.
+# Let's clean up the LSTM-enhanced Streamlit dashboard code so it's ready to run as a standalone script.
+# This version removes any unnecessary variables like `final_dashboard_path`.
 
+cleaned_dashboard_path = "/mnt/data/LSTM_LNG_Dashboard_Cleaned.py"
 
-# Full integration of LSTM model into the LNG Market section
-full_lstm_integration_code = """
+cleaned_dashboard_code = """
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -108,6 +108,7 @@ if page == "LNG Market (with Forecast)":
         st.error(f"❌ Error loading or processing data: {e}")
 """
 
-# Save this to file
-with open("LSTM_LNG_Dashboard_Output.py", "w") as f:
-    f.write(full_lstm_integration_code)
+with open(cleaned_dashboard_path, "w") as f:
+    f.write(cleaned_dashboard_code)
+
+cleaned_dashboard_path
