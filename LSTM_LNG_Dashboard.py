@@ -110,7 +110,7 @@ if page == "LNG Market (with Forecast)":
 """
 
 # Save this to file
-with open(final_dashboard_path, "w") as f:
+with open("LSTM_LNG_Dashboard_Output.py", "w") as f:
     f.write(full_lstm_integration_code)
 
 final_dashboard_path
