@@ -1,7 +1,6 @@
 # Let's generate the fully integrated dashboard script with LSTM model prediction
 # for the user-selected column in the "LNG Market" section.
 
-final_dashboard_path = "/mnt/data/lng_dashboard_with_user_selected_lstm.py"
 
 # Full integration of LSTM model into the LNG Market section
 full_lstm_integration_code = """
