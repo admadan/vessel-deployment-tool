@@ -12,7 +12,7 @@ def get_value(key, default):
     return st.session_state.loaded_data.get(key, default)
 
 # ----------------------- SIDEBAR -----------------------
-st.sidebar.title("⚙️ Scenario & Market Inputs")
+st.sidebar.title("⚙️Market Inputs and Equilibrium calculator")
 scenario_name = st.sidebar.text_input("Scenario Name", value=get_value("scenario_name", "My Scenario"))
 ets_price = st.sidebar.slider("EU ETS Carbon Price (€/t CO₂)", 60, 150, get_value("ets_price", 95))
 lng_bunker_price = st.sidebar.slider("LNG Bunker Price ($/ton)", 600, 1000, get_value("lng_bunker_price", 730))
