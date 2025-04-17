@@ -95,13 +95,32 @@ vessel_data = pd.DataFrame({
 
 # ----------------------- Vessel Input Section -----------------------
 
+import random
+
 st.header("🛠️ Vessel Input Section")
+
+speed_range = list(range(8, 22))  # Speeds from 8 to 21 inclusive
+
+# Define cubic fuel consumption profiles (hidden from user)
+performance_profiles = {
+    "good": {
+        "a": 4.0, "b": -0.15, "c": 0.08, "d": 0.002
+    },
+    "medium": {
+        "a": 6.0, "b": -0.10, "c": 0.10, "d": 0.003
+    },
+    "poor": {
+        "a": 8.0, "b": 0.00,  "c": 0.15, "d": 0.004
+    }
+}
+
+# Assign default profile only if not already assigned
+if "Performance_Profile" not in vessel_data.columns:
+    profiles = ["good", "medium", "poor"]
+    vessel_data["Performance_Profile"] = [random.choice(profiles) for _ in vessel_data.index]
+
+# UI for each vessel
 cols = st.columns(2)
-speed_range = list(range(8, 22))  # 8 to 21 knots inclusive
-
-# Define hidden default polynomial coefficients
-default_a, default_b, default_c, default_d = 5.0, -0.2, 0.1, 0.003
-
 for idx, row in vessel_data.iterrows():
     with cols[idx % 2].expander(f"🚢 {row['Name']}"):
         vessel_data.at[idx, "Name"] = st.text_input("Vessel Name", value=row["Name"], key=f"name_{idx}")
@@ -114,47 +133,45 @@ for idx, row in vessel_data.iterrows():
         if show_details:
             st.subheader("✏️ Speed vs. Fuel Consumption Table (tons/day)")
 
-            # Default polynomial-based fuel curve
+            # Use profile-based curve as default if value not stored yet
+            profile = vessel_data.at[idx, "Performance_Profile"]
+            coeffs = performance_profiles[profile]
             default_curve = {
                 "Speed (knots)": speed_range,
                 "Fuel Consumption (tons/day)": [
-                    float(row.get(f"Speed_{s}", default_a + default_b * s + default_c * s**2 + default_d * s**3))
+                    float(row.get(f"Speed_{s}", coeffs["a"] + coeffs["b"] * s + coeffs["c"] * s**2 + coeffs["d"] * s**3))
                     for s in speed_range
                 ]
             }
 
             df_input = pd.DataFrame(default_curve)
-
-            # Editable table
             edited_df = st.data_editor(df_input, key=f"editor_{idx}", num_rows="fixed")
 
-            # Store updated values in vessel_data
+            # Store user edits back into vessel_data
             for _, row_val in edited_df.iterrows():
-                speed = int(row_val["Speed (knots)"])
-                vessel_data.at[idx, f"Speed_{speed}"] = float(row_val["Fuel Consumption (tons/day)"])
+                s = int(row_val["Speed (knots)"])
+                vessel_data.at[idx, f"Speed_{s}"] = float(row_val["Fuel Consumption (tons/day)"])
 
-            # Display curve
             df_curve = edited_df.set_index("Speed (knots)")
             st.line_chart(df_curve)
 
-            # Comparison
+            # Optional comparison
             compare_toggle = st.checkbox("Compare with another vessel", key=f"compare_toggle_{idx}")
             if compare_toggle:
-                compare_vessel = st.selectbox("Select vessel to compare", [v for i, v in enumerate(vessel_data['Name']) if i != idx], key=f"compare_{idx}")
-                compare_row = vessel_data[vessel_data['Name'] == compare_vessel].iloc[0]
+                compare_vessel = st.selectbox("Select vessel to compare", [v for i, v in enumerate(vessel_data["Name"]) if i != idx], key=f"compare_{idx}")
+                compare_row = vessel_data[vessel_data["Name"] == compare_vessel].iloc[0]
                 compare_curve = [
-                    float(compare_row.get(f"Speed_{s}", default_a + default_b * s + default_c * s**2 + default_d * s**3))
-                    for s in speed_range
+                    float(compare_row.get(f"Speed_{s}", 60.0 + (s - 14)**2)) for s in speed_range
                 ]
                 df_curve[compare_vessel] = compare_curve
                 st.line_chart(df_curve)
 
-            # Additional Performance Details
+            # Remaining performance inputs
             c1, c2 = st.columns(2)
             with c1:
                 vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input("Boil Off Rate (%)", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}")
             with c2:
-                vessel_data.at[idx, "CII_Rating"] = st.selectbox("CII Rating", options=["A", "B", "C", "D", "E"],
+                vessel_data.at[idx, "CII_Rating"] = st.selectbox("CII Rating", ["A", "B", "C", "D", "E"],
                                                                  index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]),
                                                                  key=f"cii_{idx}")
                 vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (gCO₂e/MJ)",
