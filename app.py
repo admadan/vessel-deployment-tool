@@ -101,16 +101,16 @@ import pandas as pd
 import plotly.graph_objects as go
 
 st.header("🛠️ Vessel Input Section")
-speed_range = list(range(8, 22))  # 8 to 21 knots inclusive
+speed_range = list(range(8, 22))  # Speeds from 8 to 21 knots
 
-# Define cubic profile shapes
+# Performance profiles
 performance_profiles = {
     "good":   {"a": 20.0, "b": -1.0, "c": 0.5, "d": 0.010},
     "medium": {"a": 30.0, "b": -0.5, "c": 0.8, "d": 0.015},
     "poor":   {"a": 40.0, "b":  0.0, "c": 1.2, "d": 0.020},
 }
 
-# Assign profile once
+# Assign unique profile per vessel if not already assigned
 if "Performance_Profile" not in vessel_data.columns:
     profiles = ["good", "medium", "poor"]
     assigned_profiles = [profiles[i % len(profiles)] for i in range(len(vessel_data))]
@@ -120,7 +120,6 @@ if "Performance_Profile" not in vessel_data.columns:
 cols = st.columns(2)
 for idx, row in vessel_data.iterrows():
     with cols[idx % 2].expander(f"🚢 {row['Name']}"):
-        # Vessel metadata
         vessel_data.at[idx, "Name"] = st.text_input("Vessel Name", value=row["Name"], key=f"name_{idx}")
         vessel_data.at[idx, "Length_m"] = st.number_input("Length (m)", value=row["Length_m"], key=f"len_{idx}")
         vessel_data.at[idx, "Beam_m"] = st.number_input("Beam (m)", value=row["Beam_m"], key=f"beam_{idx}")
@@ -131,7 +130,7 @@ for idx, row in vessel_data.iterrows():
         if show_details:
             st.subheader("✏️ Speed vs. Fuel Consumption (tons/day)")
 
-            # Generate profile-based curve
+            # === Default cubic generation with variation ===
             profile = vessel_data.at[idx, "Performance_Profile"]
             coeffs = performance_profiles[profile]
             profile_peaks = {"good": 125.0, "medium": 140.0, "poor": 155.0}
@@ -153,12 +152,10 @@ for idx, row in vessel_data.iterrows():
 
             edited_df = st.data_editor(df_input, key=f"editor_{idx}", num_rows="fixed")
 
-            # Save edits
             for _, row_val in edited_df.iterrows():
                 s = int(row_val["Speed (knots)"])
                 vessel_data.at[idx, f"Speed_{s}"] = float(row_val["Fuel Consumption (tons/day)"])
 
-            # Polynomial fitting
             try:
                 speeds = edited_df["Speed (knots)"].values
                 consumptions = edited_df["Fuel Consumption (tons/day)"].values
@@ -174,17 +171,47 @@ for idx, row in vessel_data.iterrows():
 
                 fig = go.Figure()
 
-                # Dots: user input
                 fig.add_trace(go.Scatter(
-                    x=speeds, y=consumptions, mode='markers', name='User Input',
+                    x=speeds,
+                    y=consumptions,
+                    mode='markers',
+                    name='User Input',
                     marker=dict(size=8, color='blue')
                 ))
 
-                # Line: fitted curve
                 fig.add_trace(go.Scatter(
-                    x=smooth_speeds, y=fitted_curve, mode='lines', name='Fitted Curve',
+                    x=smooth_speeds,
+                    y=fitted_curve,
+                    mode='lines',
+                    name='Fitted Curve',
                     line=dict(color='green', width=2)
                 ))
+
+                # === Optional: compare with other vessel's fitted curve ===
+                compare_toggle = st.checkbox("Compare with another vessel", key=f"compare_toggle_{idx}")
+                if compare_toggle:
+                    compare_vessel = st.selectbox("Select vessel to compare", [v for i, v in enumerate(vessel_data['Name']) if i != idx], key=f"compare_{idx}")
+                    compare_row = vessel_data[vessel_data["Name"] == compare_vessel].iloc[0]
+                    compare_consumptions = [
+                        float(compare_row.get(f"Speed_{s}", 0)) for s in speed_range
+                    ]
+
+                    # Fit cubic to comparison vessel
+                    try:
+                        comp_coeffs = np.polyfit(speed_range, compare_consumptions, deg=3)
+                        a2, b2, c2, d2 = comp_coeffs[3], comp_coeffs[2], comp_coeffs[1], comp_coeffs[0]
+                        compare_fitted = a2 + b2 * smooth_speeds + c2 * smooth_speeds**2 + d2 * smooth_speeds**3
+
+                        fig.add_trace(go.Scatter(
+                            x=smooth_speeds,
+                            y=compare_fitted,
+                            mode='lines',
+                            name=f"{compare_vessel} (Fitted)",
+                            line=dict(color='red', dash='dot')
+                        ))
+
+                    except Exception as e:
+                        st.warning(f"Could not fit comparison vessel: {e}")
 
                 fig.update_layout(
                     title="Speed vs. Fuel Consumption",
@@ -197,46 +224,7 @@ for idx, row in vessel_data.iterrows():
             except Exception as e:
                 st.warning(f"Could not fit curve: {e}")
 
-            # Comparison
-            compare_toggle = st.checkbox("Compare with another vessel", key=f"compare_toggle_{idx}")
-            if compare_toggle:
-                compare_vessel = st.selectbox("Select vessel to compare", [v for i, v in enumerate(vessel_data['Name']) if i != idx], key=f"compare_{idx}")
-                compare_row = vessel_data[vessel_data["Name"] == compare_vessel].iloc[0]
-                compare_consumptions = [
-                    float(compare_row.get(f"Speed_{s}", 0)) for s in speed_range
-                ]
-
-                fig_compare = go.Figure()
-
-                # Main vessel
-                fig_compare.add_trace(go.Scatter(
-                    x=speed_range,
-                    y=edited_df["Fuel Consumption (tons/day)"].values,
-                    mode='markers+lines',
-                    name=row["Name"],
-                    marker=dict(size=8, color='blue'),
-                    line=dict(color='blue', dash='dot')
-                ))
-
-                # Comparison vessel
-                fig_compare.add_trace(go.Scatter(
-                    x=speed_range,
-                    y=compare_consumptions,
-                    mode='markers+lines',
-                    name=compare_vessel,
-                    marker=dict(size=8, color='red'),
-                    line=dict(color='red')
-                ))
-
-                fig_compare.update_layout(
-                    title="Comparison of S&C Curves",
-                    xaxis_title="Speed (knots)",
-                    yaxis_title="Fuel Consumption (tons/day)",
-                    legend=dict(x=0.01, y=0.99)
-                )
-                st.plotly_chart(fig_compare, use_container_width=True)
-
-            # Technical inputs
+            # Technical & regulatory inputs
             c1, c2 = st.columns(2)
             with c1:
                 vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input("Boil Off Rate (%)", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}")
