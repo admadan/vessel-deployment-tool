@@ -102,24 +102,24 @@ import pandas as pd
 st.header("🛠️ Vessel Input Section")
 speed_range = list(range(8, 22))  # 8 to 21 knots inclusive
 
-# Define hidden performance profiles (160k CBM LNG-aligned)
+# Define realistic cubic performance profiles
 performance_profiles = {
     "good":   {"a": 20.0, "b": -1.0, "c": 0.5, "d": 0.010},
     "medium": {"a": 30.0, "b": -0.5, "c": 0.8, "d": 0.015},
     "poor":   {"a": 40.0, "b":  0.0, "c": 1.2, "d": 0.020},
 }
 
-# Assign a profile to each vessel if not already done
+# Assign unique profiles once
 if "Performance_Profile" not in vessel_data.columns:
     profiles = ["good", "medium", "poor"]
     assigned_profiles = [profiles[i % len(profiles)] for i in range(len(vessel_data))]
     random.shuffle(assigned_profiles)
     vessel_data["Performance_Profile"] = assigned_profiles
 
-# Layout
 cols = st.columns(2)
 for idx, row in vessel_data.iterrows():
     with cols[idx % 2].expander(f"🚢 {row['Name']}"):
+        # Vessel metadata
         vessel_data.at[idx, "Name"] = st.text_input("Vessel Name", value=row["Name"], key=f"name_{idx}")
         vessel_data.at[idx, "Length_m"] = st.number_input("Length (m)", value=row["Length_m"], key=f"len_{idx}")
         vessel_data.at[idx, "Beam_m"] = st.number_input("Beam (m)", value=row["Beam_m"], key=f"beam_{idx}")
@@ -130,15 +130,19 @@ for idx, row in vessel_data.iterrows():
         if show_details:
             st.subheader("✏️ Speed vs. Fuel Consumption (tons/day)")
 
-            # Generate a scaled cubic curve so that max value is 160
+            # === Step 1: Generate realistic cubic-shaped default curve ===
             profile = vessel_data.at[idx, "Performance_Profile"]
             coeffs = performance_profiles[profile]
+
             raw_curve = [
                 coeffs["a"] + coeffs["b"] * s + coeffs["c"] * s**2 + coeffs["d"] * s**3
                 for s in speed_range
             ]
-            max_val = max(raw_curve)
-            scaled_curve = [val / max_val * 160.0 for val in raw_curve]
+            # Scale so that 21 knots ≈ 155 MT/day
+            current_at_21 = raw_curve[-1]
+            target_max = 155.0
+            scaling_factor = target_max / current_at_21
+            scaled_curve = [val * scaling_factor for val in raw_curve]
 
             default_curve = {
                 "Speed (knots)": speed_range,
@@ -148,12 +152,12 @@ for idx, row in vessel_data.iterrows():
             df_input = pd.DataFrame(default_curve)
             edited_df = st.data_editor(df_input, key=f"editor_{idx}", num_rows="fixed")
 
-            # Save edits
+            # Store user edits
             for _, row_val in edited_df.iterrows():
                 s = int(row_val["Speed (knots)"])
                 vessel_data.at[idx, f"Speed_{s}"] = float(row_val["Fuel Consumption (tons/day)"])
 
-            # Fit cubic to user data
+            # === Step 2: Fit a cubic curve to user data ===
             try:
                 speeds = edited_df["Speed (knots)"].values
                 consumptions = edited_df["Fuel Consumption (tons/day)"].values
@@ -166,7 +170,6 @@ for idx, row in vessel_data.iterrows():
                 smooth_speeds = np.linspace(8, 21, 100)
                 fitted_curve = a + b * smooth_speeds + c * smooth_speeds**2 + d * smooth_speeds**3
 
-                # Plot both curves
                 chart_data = pd.DataFrame({
                     "User Input": pd.Series(data=consumptions, index=speeds),
                     "Fitted Curve": pd.Series(data=fitted_curve, index=smooth_speeds)
@@ -176,7 +179,7 @@ for idx, row in vessel_data.iterrows():
             except Exception as e:
                 st.warning(f"Could not fit curve: {e}")
 
-            # Comparison Option
+            # === Step 3: Optional vessel comparison ===
             compare_toggle = st.checkbox("Compare with another vessel", key=f"compare_toggle_{idx}")
             if compare_toggle:
                 compare_vessel = st.selectbox("Select vessel to compare", [v for i, v in enumerate(vessel_data['Name']) if i != idx], key=f"compare_{idx}")
@@ -187,7 +190,7 @@ for idx, row in vessel_data.iterrows():
                 df_input[compare_vessel] = compare_values
                 st.line_chart(df_input.set_index("Speed (knots)"))
 
-            # Other performance parameters
+            # === Step 4: Additional performance inputs ===
             c1, c2 = st.columns(2)
             with c1:
                 vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input("Boil Off Rate (%)", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}")
