@@ -95,7 +95,7 @@ vessel_data = pd.DataFrame({
 
 st.header("🛠️ Vessel Input Section")
 cols = st.columns(2)
-speed_range = list(range(8, 22))  # 8 to 21 knots inclusive
+speed_range = list(range(8, 22))  # 8 to 21 inclusive
 
 for idx, row in vessel_data.iterrows():
     with cols[idx % 2].expander(f"🚢 {row['Name']}"):
@@ -112,10 +112,11 @@ for idx, row in vessel_data.iterrows():
 
             for speed in speed_range:
                 key = f"cons_{idx}_{speed}"
-                default = row.get(f"Speed_{speed}", 50 + (speed - 14)**2)  # default: parabolic shape
+                # Use float as default to avoid MixedNumericTypesError
+                default = float(row.get(f"Speed_{speed}", 50.0 + (speed - 14)**2))
                 consumption = st.number_input(f"Speed {speed} knots", min_value=0.0, value=default, key=key)
                 consumption_at_speeds[speed] = consumption
-                vessel_data.at[idx, f"Speed_{speed}"] = consumption  # Store back into the vessel_data frame
+                vessel_data.at[idx, f"Speed_{speed}"] = consumption  # store for save/load
 
             df_curve = pd.DataFrame({
                 "Speed (knots)": speed_range,
@@ -126,9 +127,8 @@ for idx, row in vessel_data.iterrows():
             if compare_toggle:
                 compare_vessel = st.selectbox("Select vessel to compare", [v for i, v in enumerate(vessel_data['Name']) if i != idx], key=f"compare_{idx}")
                 compare_row = vessel_data[vessel_data['Name'] == compare_vessel].iloc[0]
-
                 compare_curve = [
-                    compare_row.get(f"Speed_{speed}", 60 + (speed - 14)**2) for speed in speed_range
+                    float(compare_row.get(f"Speed_{speed}", 60.0 + (speed - 14)**2)) for speed in speed_range
                 ]
                 df_curve[compare_vessel] = compare_curve
 
@@ -146,8 +146,7 @@ for idx, row in vessel_data.iterrows():
                                                                                value=row["FuelEU_GHG_Compliance"],
                                                                                key=f"ghg_{idx}",
                                                                                help="GHG intensity of the vessel according to FuelEU regulations.")
-            
-        
+
 
 # ----------------------- Compliance Section -----------------------
 st.subheader("🌱 Regulatory Compliance Settings")
