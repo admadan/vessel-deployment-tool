@@ -93,9 +93,10 @@ vessel_data = pd.DataFrame({
     "Margin": [2000] * 10
 })
 
-# Vessel Input Section
 st.header("🛠️ Vessel Input Section")
 cols = st.columns(2)
+speed_range = list(range(8, 22))  # 8 to 21 knots inclusive
+
 for idx, row in vessel_data.iterrows():
     with cols[idx % 2].expander(f"🚢 {row['Name']}"):
         vessel_data.at[idx, "Name"] = st.text_input("Vessel Name", value=row["Name"], key=f"name_{idx}")
@@ -106,39 +107,37 @@ for idx, row in vessel_data.iterrows():
 
         show_details = st.toggle("Show Performance Details", key=f"toggle_{idx}")
         if show_details:
-            base_speed = st.number_input("Reference Speed (knots)", min_value=8, max_value=21, value=14, key=f"ref_speed_{idx}")
-            ref_me_consumption = st.number_input("Main Engine Consumption at Reference Speed (tons/day)", value=row["Main_Engine_Consumption_MT_per_day"], key=f"ref_me_{idx}")
-            ref_gen_consumption = st.number_input("Generator Consumption at Reference Speed (tons/day)", value=row["Generator_Consumption_MT_per_day"], key=f"ref_gen_{idx}")
+            st.subheader("Speed vs. Total Fuel Consumption")
+            consumption_at_speeds = {}
 
-            # Update values back into dataframe
-            vessel_data.at[idx, "Main_Engine_Consumption_MT_per_day"] = ref_me_consumption
-            vessel_data.at[idx, "Generator_Consumption_MT_per_day"] = ref_gen_consumption
-
-            # Speed range 8 to 21 knots
-            speed_range = list(range(8, 22))  # 8 to 21 inclusive
-            total_reference = ref_me_consumption + ref_gen_consumption
-            total_consumption = [total_reference * (speed / base_speed) ** 3 for speed in speed_range]
+            for speed in speed_range:
+                key = f"cons_{idx}_{speed}"
+                default = row.get(f"Speed_{speed}", 50 + (speed - 14)**2)  # default: parabolic shape
+                consumption = st.number_input(f"Speed {speed} knots", min_value=0.0, value=default, key=key)
+                consumption_at_speeds[speed] = consumption
+                vessel_data.at[idx, f"Speed_{speed}"] = consumption  # Store back into the vessel_data frame
 
             df_curve = pd.DataFrame({
                 "Speed (knots)": speed_range,
-                row["Name"]: total_consumption
+                row["Name"]: [consumption_at_speeds[speed] for speed in speed_range]
             }).set_index("Speed (knots)")
 
-            # Optional comparison
             compare_toggle = st.checkbox("Compare with another vessel", key=f"compare_toggle_{idx}")
             if compare_toggle:
                 compare_vessel = st.selectbox("Select vessel to compare", [v for i, v in enumerate(vessel_data['Name']) if i != idx], key=f"compare_{idx}")
                 compare_row = vessel_data[vessel_data['Name'] == compare_vessel].iloc[0]
-                compare_total_reference = compare_row["Main_Engine_Consumption_MT_per_day"] + compare_row["Generator_Consumption_MT_per_day"]
-                compare_total_consumption = [compare_total_reference * (speed / base_speed) ** 3 for speed in speed_range]
-                df_curve[compare_vessel] = compare_total_consumption
+
+                compare_curve = [
+                    compare_row.get(f"Speed_{speed}", 60 + (speed - 14)**2) for speed in speed_range
+                ]
+                df_curve[compare_vessel] = compare_curve
 
             st.line_chart(df_curve)
 
-            # Remaining vessel performance details
+            # Additional Performance Inputs
             c1, c2 = st.columns(2)
             with c1:
-                vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input("Boil Off Rate (%)", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}", help="Percentage of cargo volume lost due to boil-off.")
+                vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input("Boil Off Rate (%)", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}")
             with c2:
                 vessel_data.at[idx, "CII_Rating"] = st.selectbox("CII Rating", options=["A", "B", "C", "D", "E"],
                                                                  index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]),
@@ -147,7 +146,6 @@ for idx, row in vessel_data.iterrows():
                                                                                value=row["FuelEU_GHG_Compliance"],
                                                                                key=f"ghg_{idx}",
                                                                                help="GHG intensity of the vessel according to FuelEU regulations.")
-
             
         
 
