@@ -97,7 +97,7 @@ vessel_data = pd.DataFrame({
 
 st.header("🛠️ Vessel Input Section")
 cols = st.columns(2)
-speed_range = list(range(8, 22))  # 8 to 21 knots
+speed_range = list(range(8, 22))  # 8 to 21 knots inclusive
 
 for idx, row in vessel_data.iterrows():
     with cols[idx % 2].expander(f"🚢 {row['Name']}"):
@@ -109,20 +109,27 @@ for idx, row in vessel_data.iterrows():
 
         show_details = st.toggle("Show Performance Details", key=f"toggle_{idx}")
         if show_details:
-            st.subheader("✏️ Input Speed vs. Fuel Consumption (tons/day)")
+            st.subheader("✏️ Define Cubic Fuel Curve: a + bV + cV² + dV³")
 
-            # Build initial/default curve
+            # Let user define polynomial coefficients with defaults
+            a = st.number_input("a (base consumption)", value=5.0, key=f"a_{idx}")
+            b = st.number_input("b (linear speed effect)", value=-0.2, key=f"b_{idx}")
+            c = st.number_input("c (quadratic)", value=0.1, key=f"c_{idx}")
+            d = st.number_input("d (cubic growth)", value=0.003, key=f"d_{idx}")
+
+            # Create default curve from user-defined coefficients
             default_curve = {
                 "Speed (knots)": speed_range,
-                "Fuel Consumption (tons/day)": [float(row.get(f"Speed_{s}", 50.0 + (s - 14) ** 2)) for s in speed_range]
+                "Fuel Consumption (tons/day)": [
+                    float(row.get(f"Speed_{s}", a + b * s + c * s**2 + d * s**3)) for s in speed_range
+                ]
             }
 
             df_input = pd.DataFrame(default_curve)
 
-            # Editable table
-            edited_df = st.data_editor(df_input, key=f"editor_{idx}", num_rows="dynamic")
+            # Editable table for fine-tuning
+            edited_df = st.data_editor(df_input, key=f"editor_{idx}", num_rows="fixed")
 
-            # Update vessel_data with new input
             for _, row_val in edited_df.iterrows():
                 speed = int(row_val["Speed (knots)"])
                 vessel_data.at[idx, f"Speed_{speed}"] = float(row_val["Fuel Consumption (tons/day)"])
@@ -130,21 +137,19 @@ for idx, row in vessel_data.iterrows():
             df_curve = edited_df.set_index("Speed (knots)")
             st.line_chart(df_curve)
 
-            # Comparison toggle
+            # Comparison
             compare_toggle = st.checkbox("Compare with another vessel", key=f"compare_toggle_{idx}")
             if compare_toggle:
                 compare_vessel = st.selectbox("Select vessel to compare", [v for i, v in enumerate(vessel_data['Name']) if i != idx], key=f"compare_{idx}")
                 compare_row = vessel_data[vessel_data['Name'] == compare_vessel].iloc[0]
-                compare_curve = {
-                    "Speed (knots)": speed_range,
-                    compare_vessel: [float(compare_row.get(f"Speed_{s}", 60.0 + (s - 14) ** 2)) for s in speed_range]
-                }
-                df_compare = pd.DataFrame(compare_curve).set_index("Speed (knots)")
-                df_curve[compare_vessel] = df_compare[compare_vessel]
+                compare_curve = [
+                    float(compare_row.get(f"Speed_{s}", 60.0 + (s - 14) ** 2)) for s in speed_range
+                ]
+                df_curve[compare_vessel] = compare_curve
 
                 st.line_chart(df_curve)
 
-            # Other performance inputs
+            # Remaining performance details
             c1, c2 = st.columns(2)
             with c1:
                 vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input("Boil Off Rate (%)", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}")
