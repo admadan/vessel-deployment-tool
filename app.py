@@ -160,8 +160,6 @@ for idx, row in vessel_data.iterrows():
 
 
 
-
-
 # ----------------------- Compliance Section -----------------------
 st.subheader("🌱 Regulatory Compliance Settings")
 col1, col2 = st.columns(2)
