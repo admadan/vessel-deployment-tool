@@ -130,18 +130,18 @@ with col3:
 # === Info Section ===
 with st.expander("ℹ️ Model Equations and Savings"):
     st.markdown("### **Model 1 – Income-Generating**")
-    st.latex(r"Z = rac{R - C(D_s + D_p) - F \cdot (F_c + ETS) \cdot D_s}{D_s + D_p}")
+    st.latex(r"Z = \frac{R - C(D_s + D_p) - F \cdot (F_c + ETS) \cdot D_s}{D_s + D_p}")
 
     st.markdown("### **Model 2 – Ballast (Empty Leg)**")
-    st.latex(r"Z = \left(C_a + F \cdot F_c\right) \cdot \frac{L}{24V}")
-ight) \cdot rac{L}{24V}")
-    st.latex(r"V^* = V_0 \left(rac{C_a}{2 F_0 F_c}
+    st.latex(r"Z = \left(C_a + F \cdot F_c\r\right) \cdot \frac{L}{24V}")
+\right) \cdot \frac{L}{24V}")
+    st.latex(r"V^* = V_0 \left(\frac{C_a}{2 F_0 F_c}
 ight)^{1/3} 	ext{ (from Ronen, for cube law)}")
 
     st.markdown("### **Model 3 – Bonus/Penalty Contracts**")
-    st.latex(r"R' = R + rac{K L}{24} \left(rac{1}{V_R} - rac{1}{V}
+    st.latex(r"R' = R + \frac{K L}{24} \left(\frac{1}{V_R} - \frac{1}{V}
 ight)")
-    st.latex(r"Z = rac{R' - C(D_s + D_p) - F \cdot (F_c + ETS) \cdot D_s}{D_s + D_p}")
+    st.latex(r"Z = \frac{R' - C(D_s + D_p) - F \cdot (F_c + ETS) \cdot D_s}{D_s + D_p}")
 
     st.markdown("### 💡 **Savings Logic**")
     st.latex(r"	ext{Savings} = (Z_{	ext{opt}} - Z_{	ext{assumed}}) \cdot (D_s + D_p)")
