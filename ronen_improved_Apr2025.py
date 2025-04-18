@@ -9,11 +9,10 @@ vessels = {
     "LNG Vessel B": {"coeffs": [18.0, -1.5, 1.1, 0.012], "EF": 2.75}
 }
 
-# === UI Setup ===
 st.set_page_config(page_title="Ronen Fuel Curve + ETS", layout="wide")
 st.title("🚢 Ronen Model – Polynomial Fuel Curve + ETS")
 
-# Sidebar
+# Sidebar Inputs
 with st.sidebar:
     st.header("Input Parameters")
     vessel_name = st.selectbox("Select Vessel", list(vessels.keys()))
@@ -28,7 +27,6 @@ with st.sidebar:
 
     C = st.slider("Daily Ops Cost ($)", 5000, 50000, 12000)
     Fc = st.slider("Fuel Cost ($/ton)", 300, 1200, 800)
-
     CO2_price = st.slider("CO₂ Price ($/tCO₂)", 50, 200, 100)
     EU_share = st.slider("EU ETS Exposure (%)", 0, 100, 50)
 
@@ -42,7 +40,6 @@ def F(V): return a + b*V + c*V**2 + d*V**3
 def Ds(V): return L / (24 * V)
 def D(V): return Ds(V) + Dp
 def ETS_cost(V): return F(V) * EF * CO2_price * (EU_share / 100)
-
 def R_total(V): return freight_rate * D(V)
 
 def model1(V):
@@ -55,7 +52,7 @@ def model3(V):
     R_adj = R_total(V) + (K * L / 24) * (1 / VR - 1 / V)
     return (R_adj - (C * D(V) + F(V) * (Fc + ETS_cost(V)) * Ds(V))) / D(V)
 
-# === Calculations ===
+# === Calculation ===
 V_range = np.linspace(Vmin, Vmax, 300)
 Z1 = [model1(V) for V in V_range]
 Z2 = [model2(V) for V in V_range]
@@ -73,13 +70,12 @@ Z1_assumed = model1(assumed_speed)
 Z2_assumed = model2(assumed_speed)
 Z3_assumed = model3(assumed_speed)
 
-# === Output Display ===
+# === Outputs ===
 col1, col2, col3 = st.columns(3)
 
 with col1:
     st.subheader("📘 Model 1: Income Leg")
     Ds1 = Ds(V1_opt)
-    OC1 = (C + F(V1_opt) * Fc) * Ds1
     P1 = Z1_opt * (Ds1 + Dp)
     st.markdown(f"- **Optimum Speed:** {V1_opt:.2f} kn")
     st.markdown(f"- **Daily Profit:** ${Z1_opt:,.0f}")
@@ -97,7 +93,6 @@ with col1:
 with col2:
     st.subheader("📙 Model 2: Ballast Leg")
     Ds2 = Ds(V2_opt)
-    OC2 = (Ca + F(V2_opt) * Fc) * Ds2
     st.markdown(f"- **Optimum Speed:** {V2_opt:.2f} kn")
     st.markdown(f"- **Total Cost:** ${Z2_opt:,.0f}")
     st.markdown(f"- **% Cost Reduction:** {(Z2_assumed - Z2_opt)/Z2_assumed*100:.2f}%")
@@ -130,18 +125,16 @@ with col3:
 # === Info Section ===
 with st.expander("ℹ️ Model Equations and Savings"):
     st.markdown("### **Model 1 – Income-Generating**")
-    st.latex(r"Z = \frac{R - C(D_s + D_p) - F \cdot (F_c + ETS) \cdot D_s}{D_s + D_p}")
+    st.latex(r"Z = rac{R - C(D_s + D_p) - F \cdot (F_c + ETS) \cdot D_s}{D_s + D_p}")
 
     st.markdown("### **Model 2 – Ballast (Empty Leg)**")
-    st.latex(r"Z = \left(C_a + F \cdot F_c\r\right) \cdot \frac{L}{24V}")
-\right) \cdot \frac{L}{24V}")
-    st.latex(r"V^* = V_0 \left(\frac{C_a}{2 F_0 F_c}
-ight)^{1/3} 	ext{ (from Ronen, for cube law)}")
+    st.latex(r"Z = \left(C_a + F \cdot F_c
+ight) \cdot rac{L}{24V}")
 
     st.markdown("### **Model 3 – Bonus/Penalty Contracts**")
-    st.latex(r"R' = R + \frac{K L}{24} \left(\frac{1}{V_R} - \frac{1}{V}
+    st.latex(r"R' = R + rac{K L}{24} \left(rac{1}{V_R} - rac{1}{V}
 ight)")
-    st.latex(r"Z = \frac{R' - C(D_s + D_p) - F \cdot (F_c + ETS) \cdot D_s}{D_s + D_p}")
+    st.latex(r"Z = rac{R' - C(D_s + D_p) - F \cdot (F_c + ETS) \cdot D_s}{D_s + D_p}")
 
     st.markdown("### 💡 **Savings Logic**")
     st.latex(r"	ext{Savings} = (Z_{	ext{opt}} - Z_{	ext{assumed}}) \cdot (D_s + D_p)")
