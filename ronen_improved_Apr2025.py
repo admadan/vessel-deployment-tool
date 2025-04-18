@@ -133,7 +133,7 @@ with st.expander("ℹ️ Model Equations and Savings"):
     st.latex(r"Z = rac{R - C(D_s + D_p) - F \cdot (F_c + ETS) \cdot D_s}{D_s + D_p}")
 
     st.markdown("### **Model 2 – Ballast (Empty Leg)**")
-    st.latex(r"Z = \left(C_a + F \cdot F_c
+    st.latex(r"Z = \left(C_a + F \cdot F_c\right) \cdot \frac{L}{24V}")
 ight) \cdot rac{L}{24V}")
     st.latex(r"V^* = V_0 \left(rac{C_a}{2 F_0 F_c}
 ight)^{1/3} 	ext{ (from Ronen, for cube law)}")
