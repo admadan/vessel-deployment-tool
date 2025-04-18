@@ -1,143 +1,123 @@
-# ----------------------- Vessel Input Section -----------------------
 
+import streamlit as st
 import numpy as np
-import random
 import pandas as pd
 import plotly.graph_objects as go
 
-st.header("🛠️ Vessel Input Section")
-speed_range = list(range(8, 22))  # Speeds from 8 to 21 knots
-
-# Performance profiles
-performance_profiles = {
-    "good":   {"a": 20.0, "b": -1.0, "c": 0.5, "d": 0.010},
-    "medium": {"a": 30.0, "b": -0.5, "c": 0.8, "d": 0.015},
-    "poor":   {"a": 40.0, "b":  0.0, "c": 1.2, "d": 0.020},
+# === Vessel Cubic Curve Data (normally passed from vessel input section) ===
+vessels = {
+    "LNG Vessel A": {
+        "coeffs": [15.2, -1.8, 0.9, 0.015],  # a, b, c, d
+        "EF": 2.75
+    },
+    "LNG Vessel B": {
+        "coeffs": [18.0, -1.5, 1.1, 0.012],
+        "EF": 2.75
+    }
 }
 
-# Assign unique profile per vessel if not already assigned
-if "Performance_Profile" not in vessel_data.columns:
-    profiles = ["good", "medium", "poor"]
-    assigned_profiles = [profiles[i % len(profiles)] for i in range(len(vessel_data))]
-    random.shuffle(assigned_profiles)
-    vessel_data["Performance_Profile"] = assigned_profiles
+# === UI Setup ===
+st.set_page_config(page_title="Ronen Speed Optimization (Polynomial Fuel Curve)", layout="wide")
+st.title("🚢 Ronen Model with Polynomial Fuel Curve & ETS Cost")
 
-cols = st.columns(2)
-for idx, row in vessel_data.iterrows():
-    with cols[idx % 2].expander(f"🚢 {row['Name']}"):
-        vessel_data.at[idx, "Name"] = st.text_input("Vessel Name", value=row["Name"], key=f"name_{idx}")
-        vessel_data.at[idx, "Length_m"] = st.number_input("Length (m)", value=row["Length_m"], key=f"len_{idx}")
-        vessel_data.at[idx, "Beam_m"] = st.number_input("Beam (m)", value=row["Beam_m"], key=f"beam_{idx}")
-        vessel_data.at[idx, "Draft_m"] = st.number_input("Draft (m)", value=row["Draft_m"], key=f"draft_{idx}")
-        vessel_data.at[idx, "Margin"] = st.number_input("Margin (USD/day)", value=row["Margin"], key=f"margin_{idx}")
+# Sidebar Inputs
+with st.sidebar:
+    st.header("Inputs")
 
-        show_details = st.toggle("Show Performance Details", key=f"toggle_{idx}")
-        if show_details:
-            st.subheader("✏️ Speed vs. Fuel Consumption (tons/day)")
+    vessel_name = st.selectbox("Select Vessel", list(vessels.keys()))
+    a, b, c, d = vessels[vessel_name]["coeffs"]
+    EF = vessels[vessel_name]["EF"]
 
-            # === Default cubic generation with variation ===
-            profile = vessel_data.at[idx, "Performance_Profile"]
-            coeffs = performance_profiles[profile]
-            profile_peaks = {"good": 125.0, "medium": 140.0, "poor": 155.0}
-            target_max = profile_peaks[profile]
+    L = st.number_input("Voyage Distance (nm)", value=4000)
+    Dp = st.number_input("Port Days", value=2.0)
+    Vmin = st.slider("Min Speed (knots)", 10.0, 17.0, 12.0)
+    Vmax = st.slider("Max Speed (knots)", 17.0, 22.0, 19.0)
+    C = st.slider("Daily Ops Cost ($)", 5000, 40000, 12000)
+    Fc = st.slider("Fuel Cost ($/ton)", 300, 1200, 800)
 
-            raw_curve = [
-                coeffs["a"] + coeffs["b"] * s + coeffs["c"] * s**2 + coeffs["d"] * s**3
-                for s in speed_range
-            ]
-            current_at_21 = raw_curve[-1]
-            scaling_factor = target_max / current_at_21
-            variation = np.random.uniform(0.97, 1.03, size=len(raw_curve))
-            scaled_curve = [val * scaling_factor * v for val, v in zip(raw_curve, variation)]
+    # ETS inputs
+    CO2_price = st.slider("CO₂ Allowance Price ($/tCO₂)", 50, 200, 100)
+    EU_share = st.slider("EU ETS Coverage (%)", 0, 100, 50)
 
-            df_input = pd.DataFrame({
-                "Speed (knots)": speed_range,
-                "Fuel Consumption (tons/day)": scaled_curve
-            })
+    # Chartering inputs
+    freight_rate = st.slider("Freight Rate ($/day)", 0, 200000, 100000, step=5000)
+    assumed_speed = st.slider("Assumed Speed for Revenue", Vmin, Vmax, 15.0)
+    Ca = st.number_input("Alternative Vessel Value ($/day)", value=70000)
+    K = st.slider("Bonus/Penalty Rate ($/day)", 0, 50000, 25000)
+    VR = st.slider("Reference Contract Speed (VR)", 10.0, 25.0, 18.0)
 
-            edited_df = st.data_editor(df_input, key=f"editor_{idx}", num_rows="fixed")
+# === Calculations ===
+V_range = np.linspace(Vmin, Vmax, 300)
 
-            for _, row_val in edited_df.iterrows():
-                s = int(row_val["Speed (knots)"])
-                vessel_data.at[idx, f"Speed_{s}"] = float(row_val["Fuel Consumption (tons/day)"])
+def F(V):  # Fuel curve from cubic coefficients
+    return a + b * V + c * V**2 + d * V**3
 
-            try:
-                speeds = edited_df["Speed (knots)"].values
-                consumptions = edited_df["Fuel Consumption (tons/day)"].values
+def ETS_cost_per_day(V):
+    fuel = F(V)
+    return fuel * EF * CO2_price * (EU_share / 100)
 
-                poly_coeffs = np.polyfit(speeds, consumptions, deg=3)
-                a, b, c, d = poly_coeffs[3], poly_coeffs[2], poly_coeffs[1], poly_coeffs[0]
+def Ds(V):  # Sea days
+    return L / (24 * V)
 
-                st.markdown("### 📈 Fitted Cubic Curve Coefficients:")
-                st.markdown(f"**a** = {a:.3f} &nbsp;&nbsp; **b** = {b:.3f} &nbsp;&nbsp; **c** = {c:.3f} &nbsp;&nbsp; **d** = {d:.5f}")
+def D(V):
+    return Ds(V) + Dp
 
-                smooth_speeds = np.linspace(8, 21, 100)
-                fitted_curve = a + b * smooth_speeds + c * smooth_speeds**2 + d * smooth_speeds**3
+def R_total(V):
+    return freight_rate * D(V)
 
-                fig = go.Figure()
+def model1(V):
+    fuel = F(V)
+    total_cost = C * D(V) + fuel * (Fc + ETS_cost_per_day(V)) * Ds(V)
+    return (R_total(V) - total_cost) / D(V)
 
-                fig.add_trace(go.Scatter(
-                    x=speeds,
-                    y=consumptions,
-                    mode='markers',
-                    name='User Input',
-                    marker=dict(size=8, color='blue')
-                ))
+def model2(V):
+    fuel = F(V)
+    return (Ca + fuel * Fc) * L / (24 * V)
 
-                fig.add_trace(go.Scatter(
-                    x=smooth_speeds,
-                    y=fitted_curve,
-                    mode='lines',
-                    name='Fitted Curve',
-                    line=dict(color='green', width=2)
-                ))
+def model3(V):
+    fuel = F(V)
+    R_adj = R_total(V) + (K * L / 24) * (1 / VR - 1 / V)
+    total_cost = C * D(V) + fuel * (Fc + ETS_cost_per_day(V)) * Ds(V)
+    return (R_adj - total_cost) / D(V)
 
-                # === Optional: compare with other vessel's fitted curve ===
-                compare_toggle = st.checkbox("Compare with another vessel", key=f"compare_toggle_{idx}")
-                if compare_toggle:
-                    compare_vessel = st.selectbox("Select vessel to compare", [v for i, v in enumerate(vessel_data['Name']) if i != idx], key=f"compare_{idx}")
-                    compare_row = vessel_data[vessel_data["Name"] == compare_vessel].iloc[0]
-                    compare_consumptions = [
-                        float(compare_row.get(f"Speed_{s}", 0)) for s in speed_range
-                    ]
+# === Evaluate and Plot ===
+Z1 = [model1(v) for v in V_range]
+Z2 = [model2(v) for v in V_range]
+Z3 = [model3(v) for v in V_range]
 
-                    # Fit cubic to comparison vessel
-                    try:
-                        comp_coeffs = np.polyfit(speed_range, compare_consumptions, deg=3)
-                        a2, b2, c2, d2 = comp_coeffs[3], comp_coeffs[2], comp_coeffs[1], comp_coeffs[0]
-                        compare_fitted = a2 + b2 * smooth_speeds + c2 * smooth_speeds**2 + d2 * smooth_speeds**3
+def find_optimum(Zlist):
+    idx = np.argmax(Zlist) if Zlist != Z2 else np.argmin(Zlist)
+    return V_range[idx], Zlist[idx]
 
-                        fig.add_trace(go.Scatter(
-                            x=smooth_speeds,
-                            y=compare_fitted,
-                            mode='lines',
-                            name=f"{compare_vessel} (Fitted)",
-                            line=dict(color='red', dash='dot')
-                        ))
+V1_opt, Z1_opt = find_optimum(Z1)
+V2_opt, Z2_opt = find_optimum(Z2)
+V3_opt, Z3_opt = find_optimum(Z3)
 
-                    except Exception as e:
-                        st.warning(f"Could not fit comparison vessel: {e}")
+col1, col2, col3 = st.columns(3)
 
-                fig.update_layout(
-                    title="Speed vs. Fuel Consumption",
-                    xaxis_title="Speed (knots)",
-                    yaxis_title="Fuel Consumption (tons/day)",
-                    legend=dict(x=0.01, y=0.99)
-                )
-                st.plotly_chart(fig, use_container_width=True)
+with col1:
+    st.subheader("📘 Model 1: Income Leg")
+    st.markdown(f"**Optimum Speed:** {V1_opt:.2f} kn")
+    st.markdown(f"**Daily Profit:** ${Z1_opt:,.0f}")
+    fig1 = go.Figure()
+    fig1.add_trace(go.Scatter(x=V_range, y=Z1, mode="lines", name="Profit"))
+    fig1.update_layout(title="Model 1: Profit vs Speed", xaxis_title="Speed (kn)", yaxis_title="Daily Profit ($)", template="plotly_white")
+    st.plotly_chart(fig1, use_container_width=True)
 
-            except Exception as e:
-                st.warning(f"Could not fit curve: {e}")
+with col2:
+    st.subheader("📙 Model 2: Ballast")
+    st.markdown(f"**Optimum Speed:** {V2_opt:.2f} kn")
+    st.markdown(f"**Total Cost:** ${Z2_opt:,.0f}")
+    fig2 = go.Figure()
+    fig2.add_trace(go.Scatter(x=V_range, y=Z2, mode="lines", name="Cost"))
+    fig2.update_layout(title="Model 2: Cost vs Speed", xaxis_title="Speed (kn)", yaxis_title="Cost ($)", template="plotly_white")
+    st.plotly_chart(fig2, use_container_width=True)
 
-            # Technical & regulatory inputs
-            c1, c2 = st.columns(2)
-            with c1:
-                vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input("Boil Off Rate (%)", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}")
-            with c2:
-                vessel_data.at[idx, "CII_Rating"] = st.selectbox("CII Rating", ["A", "B", "C", "D", "E"],
-                                                                 index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]),
-                                                                 key=f"cii_{idx}")
-                vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (gCO₂e/MJ)",
-                                                                               value=row["FuelEU_GHG_Compliance"],
-                                                                               key=f"ghg_{idx}",
-                                                                               help="GHG intensity of the vessel according to FuelEU regulations.")
+with col3:
+    st.subheader("📗 Model 3: Bonus/Penalty")
+    st.markdown(f"**Optimum Speed:** {V3_opt:.2f} kn")
+    st.markdown(f"**Daily Profit:** ${Z3_opt:,.0f}")
+    fig3 = go.Figure()
+    fig3.add_trace(go.Scatter(x=V_range, y=Z3, mode="lines", name="Profit"))
+    fig3.update_layout(title="Model 3: Profit vs Speed", xaxis_title="Speed (kn)", yaxis_title="Daily Profit ($)", template="plotly_white")
+    st.plotly_chart(fig3, use_container_width=True)
