@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import os
 import random
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
@@ -265,52 +266,38 @@ if __name__ == "__main__":
         with col_button:
             if st.button("Go Back to Main"):
                 st.session_state.page = "main"
-    def page_1():
-        st.header("🛠️ Vessel Input Section")
+   
 
+    def page_1():
+        def load_or_initialize_csv_data(index, default_data):
+            """Loads vessel CSV if available or initializes with default."""
+            session_key = f"editor_data_{index}"
+            save_path = f"data/vessel_{index}.csv"
+    
+            if not os.path.exists("data"):
+                os.makedirs("data")
+            if session_key not in st.session_state:
+                if os.path.exists(save_path):
+                    st.session_state[session_key] = pd.read_csv(save_path)
+                else:
+                    st.session_state[session_key] = default_data.copy()
+                    default_data.to_csv(save_path, index=False)
+    
+        st.header("🛠️ Vessel Input Section")
+    
         # --- Performance Profiles ---
         performance_profiles = {
             "good": {"a": 10, "b": 2, "c": 0.05, "d": 0.001},
             "medium": {"a": 12, "b": 2.5, "c": 0.06, "d": 0.0012},
             "poor": {"a": 15, "b": 3, "c": 0.07, "d": 0.0015},
         }
-
-        # --- Helper Functions ---
+    
+        # --- Fuel Calculation Function ---
         def calculate_fuel_consumption(speed, profile="good"):
-            """Calculates fuel consumption based on speed and performance profile."""
             coeffs = performance_profiles[profile]
             return coeffs["a"] + coeffs["b"] * speed + coeffs["c"] * speed**2 + coeffs["d"] * speed**3
-
-
-        def update_fuel_consumption(edited_data, index):
-            """Callback function to update fuel consumption based on speed changes."""
-            if edited_data is not None: # Check if edited_data exists
-                if "vessel_data" in st.session_state:
-                    vessel_data = st.session_state["vessel_data"].copy()
-                    if index < len(vessel_data):
-                        if edited_data.get("data"):  # Use .get() for safety
-                            edited_df = pd.DataFrame(edited_data["data"])
-                            if "Speed (knots)" in edited_df.columns and "Fuel Consumption (tons/day)" in edited_df.columns:
-                                edited_row = edited_df.iloc[0] # Assuming single row edit at a time
-                                speed = edited_row["Speed (knots)"]
-                                profile = vessel_data.at[index, "Performance_Profile"] # Get the profile for the current vessel
-                                fuel_consumption = calculate_fuel_consumption(speed, profile)
-
-                                # Update the 'Fuel Consumption' in the displayed editor data
-                                current_editor_data = st.session_state.get(f"editor_{index}_data", pd.DataFrame())
-                                if not current_editor_data.empty and len(edited_df) > 0:
-                                    current_editor_data.loc[current_editor_data.index[0], "Fuel Consumption (tons/day)"] = fuel_consumption
-                                    st.session_state[f"editor_{index}_data"] = current_editor_data
-
-                                # Update the main vessel_data DataFrame
-                                speed_col_name = f"Speed_{int(speed)}"
-                                vessel_data.at[index, speed_col_name] = fuel_consumption
-                                st.session_state["vessel_data"] = vessel_data
-                    else:
-                        st.warning(f"Vessel index {index} out of bounds.")
-
-
-        # Ensure vessel_data exists in session state or create it
+    
+        # --- Initialize Vessel Data ---
         if "vessel_data" not in st.session_state:
             st.session_state["vessel_data"] = pd.DataFrame({
                 "Vessel_ID": range(1, 11),
@@ -323,122 +310,109 @@ if __name__ == "__main__":
                 "CII_Rating": ["A", "A", "A", "B", "B", "B", "C", "C", "C", "C"],
                 "Boil_Off_Rate_percent": [0.08, 0.08, 0.08, 0.09, 0.09, 0.09, 0.07, 0.07, 0.07, 0.07],
                 "Margin": [2000] * 10,
-                "Performance_Profile": ["good"] * 10  # Initialize a default profile
+                "Operational_m": [50000] * 10,
+                "Performance_Profile": ["good"] * 10,
+                 "Actual_GHG_Intensity": [50] * 10 
             })
-
+    
         vessel_data = st.session_state["vessel_data"]
-        speed_range_default = list(range(8, 22))  # Default speed range for initial data
-
+    
+        # --- Navigation Button ---
         col_button_empty, col_button = st.columns([5, 1])
         with col_button:
             if st.button("Go Back to Main", key="back_to_main_page1"):
                 st.session_state.page = "main"
-
+    
         cols = st.columns(2)
         for idx, row in vessel_data.iterrows():
             with cols[idx % 2].expander(f"🚢 {row['Name']}"):
+                # Editable vessel data
                 vessel_data.at[idx, "Name"] = st.text_input("Vessel Name", value=row["Name"], key=f"name_{idx}")
                 vessel_data.at[idx, "Length_m"] = st.number_input("Length (m)", value=row["Length_m"], key=f"len_{idx}")
                 vessel_data.at[idx, "Beam_m"] = st.number_input("Beam (m)", value=row["Beam_m"], key=f"beam_{idx}")
                 vessel_data.at[idx, "Draft_m"] = st.number_input("Draft (m)", value=row["Draft_m"], key=f"draft_{idx}")
+                vessel_data.at[idx, "Operational_m"] = st.number_input("Operational Cost (USD/day)", value=row["Operational_m"], key=f"operational_{idx}")
+               
                 vessel_data.at[idx, "Margin"] = st.number_input("Margin (USD/day)", value=row["Margin"], key=f"margin_{idx}")
+                # Input for Actual GHG Intensity (gCO2e/MJ)
+                vessel_data.at[idx, "Actual_GHG_Intensity"] = st.number_input(
+                    "Actual GHG Intensity (gCO2e/MJ)", 
+                    value=row["Actual_GHG_Intensity"], 
+                    key=f"ghg_intensity_{idx}"
+                )
+
+                # Save updated data
+                st.session_state["vessel_data"] = vessel_data
 
                 show_details = st.toggle("Show Performance Details", key=f"toggle_{idx}")
                 if show_details:
                     st.subheader("✏️ Speed vs. Fuel Consumption (tons/day)")
-
-                    # Get existing speed/consumption data or initialize with default
-                    speed_cols = [col for col in vessel_data.columns if col.startswith("Speed_")]
-                    if speed_cols:
-                        speed_data = pd.DataFrame({
-                            "Speed (knots)": [int(col.split("_")[1]) for col in speed_cols],
-                            "Fuel Consumption (tons/day)": [row[col] for col in speed_cols]
-                        }).sort_values(by="Speed (knots)").reset_index(drop=True)
-                    else:
-                        # Use default calculation for initial data
-                        profile = vessel_data.at[idx, "Performance_Profile"]
-                        coeffs = performance_profiles[profile]
-                        profile_peaks = {"good": 125.0, "medium": 140.0, "poor": 155.0}
-                        target_max = profile_peaks[profile]
-                        raw_curve = [coeffs["a"] + coeffs["b"] * s + coeffs["c"] * s**2 + coeffs["d"] * s**3 for s in speed_range_default]
-                        current_at_21 = raw_curve[-1]
-                        scaling_factor = target_max / current_at_21
-                        variation = np.random.uniform(0.97, 1.03, size=len(raw_curve))
-                        scaled_curve = [val * scaling_factor * v for val, v in zip(raw_curve, variation)]
-                        speed_data = pd.DataFrame({"Speed (knots)": speed_range_default, "Fuel Consumption (tons/day)": scaled_curve})
-
-                    # Store and retrieve the editor data in session state
-                    editor_key = f"editor_{idx}_data"
-                    if editor_key not in st.session_state:
-                        st.session_state[editor_key] = speed_data.copy()
-
+                    editor_key = f"editor_widget_{idx}"
+                    session_key = f"editor_data_{idx}"
+    
+                    default_speed_data = pd.DataFrame({
+                        "Speed (knots)": [10, 12, 14],
+                        "Fuel Consumption (tons/day)": [20, 25, 30]
+                    })
+    
+                    load_or_initialize_csv_data(idx, default_speed_data)
+    
                     edited_data = st.data_editor(
-                        st.session_state[editor_key],
-                        key=f"editor_{idx}",
-                        num_rows="dynamic",
-                        on_change=lambda: update_fuel_consumption(st.session_state.get(f"editor_{idx}_data"), idx)
+                        st.session_state[session_key],
+                        key=editor_key,
+                        num_rows="dynamic"
                     )
-                    st.session_state[editor_key] = edited_data  # Update session state with the edited data
-
+                    edited_data.to_csv(f"data/vessel_{idx}.csv", index=False)
+    
                     try:
-                        speeds = edited_data["Speed (knots)"].values if "Speed (knots)" in edited_data else []
-                        consumptions = edited_data["Fuel Consumption (tons/day)"].values if "Fuel Consumption (tons/day)" in edited_data else []
-
-                        if len(speeds) >= 2:  # Need at least two points to fit a curve
-                            poly_coeffs = np.polyfit(speeds, consumptions, deg=3)
-                            a, b, c, d = poly_coeffs[3], poly_coeffs[2], poly_coeffs[1], poly_coeffs[0]
-
+                        speeds = edited_data["Speed (knots)"].dropna().astype(float).values
+                        consumptions = edited_data["Fuel Consumption (tons/day)"].dropna().astype(float).values
+    
+                        if len(speeds) >= 2:
+                            coeffs = np.polyfit(speeds, consumptions, 3)
+                            a, b, c, d = coeffs[::-1]
+    
                             st.markdown("### 📈 Fitted Cubic Curve Coefficients:")
-                            st.markdown(f"**a** = {a:.3f} &nbsp;&nbsp; **b** = {b:.3f} &nbsp;&nbsp; **c** = {c:.3f} &nbsp;&nbsp; **d** = {d:.5f}")
-
+                            st.markdown(f"**a** = {a:.3f}, **b** = {b:.3f}, **c** = {c:.3f}, **d** = {d:.5f}")
+    
                             smooth_speeds = np.linspace(min(speeds), max(speeds), 100)
                             fitted_curve = a + b * smooth_speeds + c * smooth_speeds**2 + d * smooth_speeds**3
-
+    
                             fig = go.Figure()
-
-                            fig.add_trace(go.Scatter(
-                                x=speeds,
-                                y=consumptions,
-                                mode='markers',
-                                name='User Input',
-                                marker=dict(size=8, color='blue')
-                            ))
-
-                            fig.add_trace(go.Scatter(
-                                x=smooth_speeds,
-                                y=fitted_curve,
-                                mode='lines',
-                                name='Fitted Curve',
-                                line=dict(color='green', width=2)
-                            ))
-
-                            # === Optional: compare with other vessel's fitted curve ===
+                            fig.add_trace(go.Scatter(x=speeds, y=consumptions, mode='markers', name='User Input'))
+                            fig.add_trace(go.Scatter(x=smooth_speeds, y=fitted_curve, mode='lines', name='Fitted Curve', line=dict(color='green')))
+    
+                            # --- Comparison ---
                             compare_toggle = st.checkbox("Compare with another vessel", key=f"compare_toggle_{idx}")
                             if compare_toggle:
                                 compare_vessel = st.selectbox("Select vessel to compare", [v for i, v in enumerate(vessel_data['Name']) if i != idx], key=f"compare_{idx}")
-                                compare_row = vessel_data[vessel_data["Name"] == compare_vessel].iloc[0]
-                                compare_speeds_comp = [int(col.split("_")[1]) for col in compare_row.index if col.startswith("Speed_")]
-                                compare_consumptions_comp = [compare_row[f"Speed_{s}"] for s in compare_speeds_comp]
-
-                                if len(compare_speeds_comp) >= 2:
-                                    try:
-                                        comp_coeffs = np.polyfit(compare_speeds_comp, compare_consumptions_comp, deg=3)
-                                        a2, b2, c2, d2 = comp_coeffs[3], comp_coeffs[2], comp_coeffs[1], comp_coeffs[0]
-                                        smooth_speeds_comp = np.linspace(min(compare_speeds_comp), max(compare_speeds_comp), 100)
-                                        compare_fitted = a2 + b2 * smooth_speeds_comp + c2 * smooth_speeds_comp**2 + d2 * smooth_speeds_comp**3
-
+                                compare_idx = vessel_data[vessel_data["Name"] == compare_vessel].index[0]
+                                compare_data_path = f"data/vessel_{compare_idx}.csv"
+    
+                                if os.path.exists(compare_data_path):
+                                    comp_data = pd.read_csv(compare_data_path)
+                                    comp_speeds = comp_data["Speed (knots)"].dropna().astype(float).values
+                                    comp_consumptions = comp_data["Fuel Consumption (tons/day)"].dropna().astype(float).values
+    
+                                    if len(comp_speeds) >= 3:
+                                        comp_coeffs = np.polyfit(comp_speeds, comp_consumptions, 3)
+                                        a2, b2, c2, d2 = comp_coeffs[::-1]
+    
+                                        comp_smooth = np.linspace(min(comp_speeds), max(comp_speeds), 100)
+                                        comp_curve = a2 + b2 * comp_smooth + c2 * comp_smooth**2 + d2 * comp_smooth**3
+    
                                         fig.add_trace(go.Scatter(
-                                            x=smooth_speeds_comp,
-                                            y=compare_fitted,
+                                            x=comp_smooth,
+                                            y=comp_curve,
                                             mode='lines',
                                             name=f"{compare_vessel} (Fitted)",
                                             line=dict(color='red', dash='dot')
                                         ))
-                                    except Exception as e:
-                                        st.warning(f"Could not fit comparison vessel: {e}")
+                                    else:
+                                        st.warning(f"Not enough data for comparison with {compare_vessel}.")
                                 else:
-                                    st.warning(f"Not enough speed/consumption data for {compare_vessel} to compare.")
-
+                                    st.warning(f"No saved data found for {compare_vessel}.")
+    
                             fig.update_layout(
                                 title="Speed vs. Fuel Consumption",
                                 xaxis_title="Speed (knots)",
@@ -446,27 +420,11 @@ if __name__ == "__main__":
                                 legend=dict(x=0.01, y=0.99)
                             )
                             st.plotly_chart(fig, use_container_width=True)
-                        else:
-                            st.warning("Please input at least two speed/consumption data points to fit the curve.")
-
+    
                     except Exception as e:
-                        st.warning(f"Could not fit curve: {e}")
+                        st.error(f"Error processing data: {e}")
 
-                    # Technical & regulatory inputs
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        vessel_data.at[idx, "Boil_Off_Rate_percent"] = st.number_input("Boil Off Rate (%)", value=row["Boil_Off_Rate_percent"], key=f"bor_{idx}")
-                    with c2:
-                        vessel_data.at[idx, "CII_Rating"] = st.selectbox("CII Rating", ["A", "B", "C", "D", "E"],
-                                                                        index=["A", "B", "C", "D", "E"].index(row["CII_Rating"]),
-                                                                        key=f"cii_{idx}")
-                        vessel_data.at[idx, "FuelEU_GHG_Compliance"] = st.number_input("FuelEU GHG Intensity (gCO₂e/MJ)",
-                                                                                        value=row["FuelEU_GHG_Compliance"],
-                                                                                        key=f"ghg_{idx}",
-                                                                                        help="GHG intensity of the vessel according to FuelEU regulations.")
 
-        # Update session state with the modified vessel data
-        st.session_state["vessel_data"] = vessel_data
     def page_2():
         st.title("Deployment Simulation")
     
@@ -475,56 +433,69 @@ if __name__ == "__main__":
             if st.button("Go Back to Main"):
                 st.session_state.page = "main"
     
-        vessel_data = pd.DataFrame({
-            "Vessel_ID": range(1, 11),
-            "Name": [f"LNG Carrier {chr(65 + i)}" for i in range(10)],
-            "Length_m": [295] * 10,
-            "Beam_m": [46] * 10,
-            "Draft_m": [11.5] * 10,
-            "Capacity_CBM": [160000] * 10,
-            "FuelEU_GHG_Compliance": [65, 65, 65, 80, 80, 80, 95, 95, 95, 95],
-            "CII_Rating": ["A", "A", "A", "B", "B", "B", "C", "C", "C", "C"],
-            "Main_Engine_Consumption_MT_per_day": [70, 72, 74, 85, 88, 90, 100, 102, 105, 107],
-            "Generator_Consumption_MT_per_day": [5, 5, 5, 6, 6, 6, 7, 7, 7, 7],
-            "Boil_Off_Rate_percent": [0.08, 0.08, 0.08, 0.09, 0.09, 0.09, 0.07, 0.07, 0.07, 0.07],
-            "Margin": [2000] * 10
-        })
+        # Use vessel_data from session state if available
+        if "vessel_data" in st.session_state:
+            vessel_data = st.session_state["vessel_data"]
+        else:
+            st.error("Vessel data not found. Please fill out data in the previous page first.")
+            return
     
-        # col_input, col_results = st.columns([1, 2]) # Adjusted column widths
-        col_input, col_results = st.columns([0.7, 2.3]) # Further adjusted column widths
-
+        col_input, col_results = st.columns([0.7, 4.2])  # Adjusted column widths
     
         with col_input:
             st.subheader("Simulation Inputs")
+    
+            # Use vessel_0.csv for available speeds (assumption)
+            default_vessel_path = "data/vessel_0.csv"
+            if os.path.exists(default_vessel_path):
+                default_csv_data = pd.read_csv(default_vessel_path)
+                speed_options = default_csv_data["Speed (knots)"].dropna().unique()
+                selected_speed = st.selectbox("Select Speed (knots)", speed_options)
+            else:
+                st.warning("Speed options not found. Make sure data/vessel_0.csv exists.")
+                return
+    
             carbon_calc_method = st.selectbox("Carbon Calculation Method", ["Fixed Rate", "Boil Off Rate"])
             ets_price = st.number_input("ETS Price (USD/MT CO2)", value=75)
             lng_bunker_price = st.number_input("LNG Bunker Price (USD/MT)", value=600)
-            required_ghg_intensity = st.number_input("Required GHG Intensity", value=50)
+            required_ghg_intensity = st.number_input("Required GHG Intensity (gCO2e/MJ)", value=50)
             penalty_per_excess_unit = st.number_input("Penalty per Excess GHG Unit (USD)", value=1000)
             base_spot_rate = st.number_input("Base Spot Rate (USD/day)", value=120000)
     
         with col_results:
             st.subheader("Deployment Simulation Results")
-            total_co2_emissions = []
             results = []
     
             for index, vessel in vessel_data.iterrows():
-                ref_total_fuel = vessel["Main_Engine_Consumption_MT_per_day"] + vessel["Generator_Consumption_MT_per_day"]
-                adjusted_fuel = ref_total_fuel
+                vessel_data_path = f"data/vessel_{index}.csv"
+    
+                # Default fuel consumption
+                fuel_consumption = 0
+    
+                if os.path.exists(vessel_data_path):
+                    vessel_csv_data = pd.read_csv(vessel_data_path)
+                    matching_row = vessel_csv_data[vessel_csv_data["Speed (knots)"] == selected_speed]
+                    if not matching_row.empty:
+                        fuel_consumption = matching_row["Fuel Consumption (tons/day)"].values[0]
+    
+                # Use Boil Off Rate if selected
                 if carbon_calc_method == "Boil Off Rate":
                     adjusted_fuel = vessel["Boil_Off_Rate_percent"] * vessel["Capacity_CBM"] / 1000
+                else:
+                    adjusted_fuel = fuel_consumption
     
                 auto_co2 = adjusted_fuel * 3.114
-                carbon_cost = auto_co2 * ets_price
+                carbon_cost = adjusted_fuel * ets_price
                 fuel_cost = adjusted_fuel * lng_bunker_price
                 margin_cost = vessel["Margin"]
     
+                # GHG Penalty calculation
                 ghg_penalty = 0
-                if vessel["FuelEU_GHG_Compliance"] > required_ghg_intensity:
-                    excess = vessel["FuelEU_GHG_Compliance"] - required_ghg_intensity
+                if vessel["Actual_GHG_Intensity"] > required_ghg_intensity:
+                    excess = vessel["Actual_GHG_Intensity"] - required_ghg_intensity
                     ghg_penalty = excess * penalty_per_excess_unit
-    
-                breakeven = fuel_cost + carbon_cost + margin_cost + ghg_penalty
+                breakeven = fuel_cost + carbon_cost + margin_cost + ghg_penalty+ vessel["Operational_m"]
+                vessel_market = base_spot_rate / breakeven if breakeven else 0
     
                 results.append({
                     "Vessel": vessel["Name"],
@@ -532,12 +503,16 @@ if __name__ == "__main__":
                     "Carbon Cost ($/day)": f"{carbon_cost:,.1f}",
                     "GHG Penalty ($/day)": f"{ghg_penalty:,.1f}",
                     "Margin ($/day)": f"{margin_cost:,.1f}",
+                    "Operation Cost ($/day)": f"{vessel['Operational_m']:,.1f}",
+                    # "Operation Cost ($/day)": f"{operation_m:,.1f}",
                     "Breakeven Spot ($/day)": f"{breakeven:,.1f}",
-                    "Decision": "✅ Spot Recommended" if base_spot_rate > breakeven else "❌ TC/Idle Preferred"
+                    "Vessel Market": f"{vessel_market:.2f}",
+                    "Decision": "Spot Recommended" if base_spot_rate > breakeven else "TC/Idle Preferred"
                 })
     
             results_df = pd.DataFrame(results)
-            st.dataframe(results_df, use_container_width=True) # Ensure dataframe uses available width
+            st.dataframe(results_df, use_container_width=True)
+
 
     def page_3():
         st.title("Voyage Simulation Advisor")
@@ -606,75 +581,77 @@ if __name__ == "__main__":
                 st.success(f"Optimal Economical Speed: {best_speed:.1f} knots with TCE of ${best_speed_row['TCE ($/day)']:.2f}/day")
     def page_4():
         st.title("Market Condition")
-
+    
         col_button_empty, col_button = st.columns([5, 1])
         with col_button:
             if st.button("Go Back to Main", key="market_condition_back_button"): # Added unique key
                 st.session_state.page = "main"
-
+    
         # Create two columns for layout
         col_inputs, col_results = st.columns(2)
-
+    
         with col_inputs:
             st.subheader("Market Inputs")
-            st.session_state.scenario_name = st.text_input("Scenario Name", value=st.session_state.get('scenario_name', "My Scenario"), key="scenario_name_input")
-            st.session_state.ets_price = st.slider("EU ETS Carbon Price (€/t CO₂)", 60, 150, st.session_state.get('ets_price', 95), key="ets_price_slider")
-            st.session_state.lng_bunker_price = st.slider("LNG Bunker Price ($/ton)", 600, 1000, st.session_state.get('lng_bunker_price', 730), key="lng_bunker_price_slider")
-
-            st.subheader("Freight Market Inputs")
-            st.session_state.fleet_size_number_supply = st.slider("Fleet Size (# of Ships)", 1, 5000, st.session_state.get('fleet_size_number_supply', 3131), step=1, key="fleet_size_number_supply_slider")
-            st.session_state.fleet_size_dwt_supply_in_dwt_million = st.slider("Supply (M DWT)", 100.0, 500.0, st.session_state.get('fleet_size_dwt_supply_in_dwt_million', 254.1), step=0.1, key="fleet_size_dwt_supply_in_dwt_million_slider")
-            st.session_state.utilization_constant = st.slider("Utilization Factor", 0.0, 1.0, st.session_state.get('utilization_constant', 0.95), step=0.01, key="utilization_constant_slider")
-            st.session_state.assumed_speed = st.slider("Speed (knots)", 5.0, 20.0, st.session_state.get('assumed_speed', 11.0), step=0.1, key="assumed_speed_slider")
-            st.session_state.sea_margin = st.slider("Sea Margin (%)", 0.0, 0.1, st.session_state.get('sea_margin', 0.05), step=0.01, key="sea_margin_slider")
-            st.session_state.assumed_laden_days = st.slider("Laden Days Fraction", 0.0, 1.0, st.session_state.get('assumed_laden_days', 0.4), step=0.01, key="assumed_laden_days_slider")
-            st.session_state.demand_billion_ton_mile = st.slider("Demand (Bn Ton Mile)", 1000.0, 20000.0, st.session_state.get('demand_billion_ton_mile', 10396.0), step=10.0, key="demand_billion_ton_mile_slider")
+            
+            # Replacing sliders with input boxes
+            st.session_state.fleet_size_number_supply = st.text_input("Fleet Size (# of Ships)", value=st.session_state.get('fleet_size_number_supply', 3131), key="fleet_size_number_supply_input")
+            st.session_state.fleet_size_dwt_supply_in_dwt_million = st.text_input("Supply (DWT Million)", value=st.session_state.get('fleet_size_dwt_supply_in_dwt_million', 254.1), key="fleet_size_dwt_supply_in_dwt_million_input")
+            st.session_state.utilization_constant = st.text_input("Utilization Factor", value=st.session_state.get('utilization_constant', 0.95), key="utilization_constant_input")
+            st.session_state.assumed_speed = st.text_input("Speed (knots)", value=st.session_state.get('assumed_speed', 11.0), key="assumed_speed_input")
+            st.session_state.sea_margin = st.text_input("Sea Margin (%)", value=st.session_state.get('sea_margin', 0.05), key="sea_margin_input")
+            st.session_state.assumed_laden_days = st.text_input("Laden Days Fraction", value=st.session_state.get('assumed_laden_days', 0.4), key="assumed_laden_days_input")
+            st.session_state.demand_billion_ton_mile = st.text_input("Demand (Bn Ton Mile)", value=st.session_state.get('demand_billion_ton_mile', 10396.0), key="demand_billion_ton_mile_input")
             st.session_state.auto_tightness = st.checkbox("Auto-calculate market tightness", value=st.session_state.get('auto_tightness', True), key="auto_tightness_checkbox")
             if not st.session_state.auto_tightness:
-                st.session_state.manual_tightness = st.slider("Manual Market Tightness", 0.0, 1.0, st.session_state.get("manual_tightness", 0.5), step=0.01, key="manual_tightness_slider")
-            st.session_state.base_spot_rate = st.slider("Spot Rate (USD/day)", 5000, 150000, st.session_state.get('base_spot_rate', 60000), step=1000, key="base_spot_rate_slider")
-            st.session_state.base_tc_rate = st.slider("TC Rate (USD/day)", 5000, 140000, st.session_state.get('base_tc_rate', 50000), step=1000, key="base_tc_rate_slider")
-            st.session_state.carbon_calc_method = st.radio("Carbon Cost Based On", ["Main Engine Consumption", "Boil Off Rate"], index=["Main Engine Consumption", "Boil Off Rate"].index(st.session_state.get('carbon_calc_method', 'Main Engine Consumption')), key="carbon_calc_method_radio")
-
+                st.session_state.manual_tightness = st.text_input("Manual Market Tightness", value=st.session_state.get("manual_tightness", 0.5), key="manual_tightness_input")
+            st.session_state.base_spot_rate = st.text_input("Spot Rate (USD/day)", value=st.session_state.get('base_spot_rate', 60000), key="base_spot_rate_input")
+            st.session_state.base_tc_rate = st.text_input("TC Rate (USD/day)", value=st.session_state.get('base_tc_rate', 50000), key="base_tc_rate_input")
+    
+            # st.session_state.carbon_calc_method = st.radio("Carbon Cost Based On", ["Main Engine Consumption", "Boil Off Rate"], index=["Main Engine Consumption", "Boil Off Rate"].index(st.session_state.get('carbon_calc_method', 'Main Engine Consumption')), key="carbon_calc_method_radio")
+    
         with col_results:
-            st.header("Market Inputs")
-            st.write(f"Scenario Name: {st.session_state.get('scenario_name', 'My Scenario')}")
-            st.write(f"EU ETS Carbon Price: {st.session_state.get('ets_price', 95)} €/t CO₂")
-            st.write(f"LNG Bunker Price: {st.session_state.get('lng_bunker_price', 730)} $/ton")
-            st.subheader("Freight Market Inputs")
-            st.write(f"Fleet Size: {st.session_state.get('fleet_size_number_supply', 3131)} Ships")
-            st.write(f"Supply: {st.session_state.get('fleet_size_dwt_supply_in_dwt_million', 254.1)} M DWT")
-            st.write(f"Utilization Factor: {st.session_state.get('utilization_constant', 0.95)}")
-            st.write(f"Assumed Speed: {st.session_state.get('assumed_speed', 11.0)} knots")
-            st.write(f"Sea Margin: {st.session_state.get('sea_margin', 0.05) * 100}%")
-            st.write(f"Laden Days Fraction: {st.session_state.get('assumed_laden_days', 0.4)}")
-            st.write(f"Demand: {st.session_state.get('demand_billion_ton_mile', 10396.0)} Bn Ton Mile")
-            st.write(f"Auto-calculate market tightness: {st.session_state.get('auto_tightness', True)}")
             st.subheader("Equilibrium Calculations")
-            dwt_utilization = (st.session_state.fleet_size_dwt_supply_in_dwt_million * 1_000_000 / st.session_state.fleet_size_number_supply) * st.session_state.utilization_constant
-            distance_travelled_per_day = st.session_state.assumed_speed * 24 * (1 - st.session_state.sea_margin)
-            productive_laden_days_per_year = st.session_state.assumed_laden_days * 365
-            maximum_supply_billion_ton_mile = st.session_state.fleet_size_number_supply * dwt_utilization * distance_travelled_per_day * productive_laden_days_per_year / 1_000_000_000
-            equilibrium = st.session_state.demand_billion_ton_mile - maximum_supply_billion_ton_mile
-
-            if st.session_state.auto_tightness:
-                market_tightness = min(max(0.3 + (equilibrium / st.session_state.demand_billion_ton_mile), 0.0), 1.0)
-            else:
-                market_tightness = st.session_state.get("manual_tightness", 0.5)
-
-            sensitivity = abs(equilibrium / st.session_state.demand_billion_ton_mile)
-
-            st.write(f"DWT Utilization: {dwt_utilization:.1f} MT")
-            st.write(f"Max Supply: {maximum_supply_billion_ton_mile:.1f} Bn Ton Mile")
-            st.write(f"Equilibrium: {equilibrium:.1f} Bn Ton Mile")
-            st.write(f"Market Condition: { 'Excess Supply' if equilibrium < 0 else 'Excess Demand'}")
-            st.write(f"Market Tightness: {market_tightness:.2f}")
-            st.write(f"Market Sensitivity: {sensitivity:.2%}")
-
-            st.subheader("Base Rates")
-            st.write(f"Spot Rate: {st.session_state.base_spot_rate} USD/day")
-            st.write(f"TC Rate: {st.session_state.base_tc_rate} USD/day")
-            st.write(f"Carbon Cost Based On: {st.session_state.carbon_calc_method}")
+            
+            try:
+                fleet_size_number_supply = float(st.session_state.fleet_size_number_supply)
+                fleet_size_dwt_supply_in_dwt_million = float(st.session_state.fleet_size_dwt_supply_in_dwt_million)
+                utilization_constant = float(st.session_state.utilization_constant)
+                assumed_speed = float(st.session_state.assumed_speed)
+                sea_margin = float(st.session_state.sea_margin)
+                assumed_laden_days = float(st.session_state.assumed_laden_days)
+                demand_billion_ton_mile = float(st.session_state.demand_billion_ton_mile)
+    
+                dwt_utilization = (fleet_size_dwt_supply_in_dwt_million * 1_000_000 / fleet_size_number_supply) * utilization_constant
+                distance_travelled_per_day = assumed_speed * 24 * (1 - sea_margin)
+                productive_laden_days_per_year = assumed_laden_days * 365
+                maximum_supply_billion_ton_mile = fleet_size_number_supply * dwt_utilization * distance_travelled_per_day * productive_laden_days_per_year / 1_000_000_000
+                equilibrium = demand_billion_ton_mile - maximum_supply_billion_ton_mile
+    
+                if st.session_state.auto_tightness:
+                    market_tightness = min(max(0.3 + (equilibrium / demand_billion_ton_mile), 0.0), 1.0)
+                else:
+                    market_tightness = float(st.session_state.get("manual_tightness", 0.5))
+    
+                sensitivity = abs(equilibrium / demand_billion_ton_mile)
+    
+                # Adding new fields for productivity and excess/deficit vessels
+                productivity_per_vessel = maximum_supply_billion_ton_mile / fleet_size_number_supply
+                excess_deficit_vessels = equilibrium / productivity_per_vessel
+    
+                # Displaying results
+                st.write(f"DWT Utilization: {dwt_utilization:.1f} MT")
+                st.write(f"Max Supply: {maximum_supply_billion_ton_mile:.1f} Bn Ton Mile")
+                st.write(f"Equilibrium: {equilibrium:.1f} Bn Ton Mile")
+                st.write(f"Market Condition: { 'Excess Supply' if equilibrium < 0 else 'Excess Demand'}")
+                st.write(f"Market Tightness: {market_tightness:.2f}")
+                st.write(f"Market Sensitivity: {sensitivity:.2%}")
+                
+                # New fields
+                st.write(f"Productivity per Vessel: {productivity_per_vessel:.2f} Bn Ton Mile")
+                st.write(f"Excess/Deficit Vessels: {excess_deficit_vessels:.1f} vessels")
+            
+            except ValueError:
+                st.error("Please enter valid numeric values for the inputs.")
 
 
 
