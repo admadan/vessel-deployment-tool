@@ -23,9 +23,26 @@ G0 = st.sidebar.number_input("Future Profit Potential G0 (USD)", 0, 10000000, va
 v_min = st.sidebar.slider("Minimum speed (knots)", 10.0, 14.0, value=11.0)
 v_max = st.sidebar.slider("Maximum speed (knots)", 14.0, 20.0, value=15.0)
 
+# Fuel consumption polynomial coefficients for laden
+st.sidebar.markdown("### Fuel Curve Coefficients - Laden")
+a_l = st.sidebar.number_input("a (laden)", value=0.0)
+b_l = st.sidebar.number_input("b (laden)", value=0.0)
+c_l = st.sidebar.number_input("c (laden)", value=0.0)
+d_l = st.sidebar.number_input("d (laden)", value=1.0)
+
+# Fuel consumption polynomial coefficients for ballast
+st.sidebar.markdown("### Fuel Curve Coefficients - Ballast")
+a_b = st.sidebar.number_input("a (ballast)", value=0.0)
+b_b = st.sidebar.number_input("b (ballast)", value=0.0)
+c_b = st.sidebar.number_input("c (ballast)", value=0.0)
+d_b = st.sidebar.number_input("d (ballast)", value=1.0)
+
 # ---------------- Calculations ----------------
-def fuel_consumption(v):
-    return 5 + 0.01 * v**3  # Simplified fuel curve in tons/day
+def fuel_consumption(v, is_laden):
+    if is_laden:
+        return a_l + b_l * v + c_l * v**2 + d_l * v**3
+    else:
+        return a_b + b_b * v + c_b * v**2 + d_b * v**3
 
 def leg_time(v):
     return distance / (24 * v) + 2  # sailing time + 2 days port time
@@ -33,7 +50,7 @@ def leg_time(v):
 def discounted_profit(v, is_laden):
     T = leg_time(v)
     rev = freight_rate * cargo_quantity if is_laden else 0
-    fuel_cost = fuel_consumption(v) * T * fuel_price
+    fuel_cost = fuel_consumption(v, is_laden) * T * fuel_price
     tce_cost = (1 - np.exp(-alpha * T)) * time_charter_cost / alpha
     return (rev * np.exp(-alpha * T)) - fuel_cost - tce_cost
 
