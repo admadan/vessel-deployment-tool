@@ -45,44 +45,60 @@ def fuel_consumption(v, is_laden):
         return a_b + b_b * v + c_b * v**2 + d_b * v**3
 
 def leg_time(v):
-    return distance / (24 * v) + 2  # sailing time + 2 days port time
+    return distance / (24 * v) + 2
 
-def discounted_profit(v, is_laden):
+def leg_profit(v, is_laden):
     T = leg_time(v)
     rev = freight_rate * cargo_quantity if is_laden else 0
     fuel_cost = fuel_consumption(v, is_laden) * T * fuel_price
     tce_cost = (1 - np.exp(-alpha * T)) * time_charter_cost / alpha
-    return (rev * np.exp(-alpha * T)) - fuel_cost - tce_cost
+    return (rev * np.exp(-alpha * T)) - fuel_cost - tce_cost, T
 
-speeds = np.arange(v_min, v_max + 0.1, 0.1)
-data = []
+# Dynamic programming algorithm
+def dp_optimize(speeds):
+    memo = {}  # (i, j, t): max NPV
+    path = {}  # (i, j, t): best speed
 
-for v in speeds:
-    total_npv = 0
-    total_time = 0
-    for i in range(1, n+1):
-        for j in range(1, m+1):
+    def dp(i, j, acc_time):
+        if i == n and j == m:
+            return G0 * np.exp(-alpha * acc_time), []
+
+        key = (i, j, round(acc_time, 2))
+        if key in memo:
+            return memo[key]
+
+        best_val = -np.inf
+        best_speed = None
+        best_seq = []
+
+        for v in speeds:
             is_laden = (j % 2 == 1)
-            T = leg_time(v)
-            profit = discounted_profit(v, is_laden)
-            discount_factor = np.exp(-alpha * total_time)
-            total_npv += profit * discount_factor
-            total_time += T
-    total_npv += G0 * np.exp(-alpha * total_time)
-    data.append([round(v, 2), total_npv, total_time])
+            profit, dt = leg_profit(v, is_laden)
+            future_val, seq = dp(i + (j // m), (j % m) + 1, acc_time + dt)
+            total_val = profit * np.exp(-alpha * acc_time) + future_val
+            if total_val > best_val:
+                best_val = total_val
+                best_speed = v
+                best_seq = [(i + 1, j + 1, round(acc_time + dt, 1), round(v, 2))] + seq
 
-results = pd.DataFrame(data, columns=["Speed (knots)", "Total NPV (USD)", "Total Time (days)"])
-opt_row = results.loc[results["Total NPV (USD)"].idxmax()]
+        memo[key] = (best_val, best_seq)
+        return memo[key]
+
+    return dp(0, 0, 0.0)
+
+speeds = np.round(np.arange(v_min, v_max + 0.1, 0.1), 2)
+npv_result, opt_path = dp_optimize(speeds)
 
 # ---------------- UI Display ----------------
 st.title("Ship Speed Optimization Dashboard")
-st.subheader("NPV Maximization Based on Speed")
+st.subheader("NPV Maximization Using Dynamic Programming")
 
-st.dataframe(results.style.format({"Total NPV (USD)": "${:,.0f}", "Total Time (days)": "{:.1f}"}))
+st.markdown(f"### 🔧 Optimal Strategy")
+st.markdown(f"- **Total NPV:** ${npv_result:,.0f}")
 
-st.markdown(f"### 🔧 Optimal Speed Recommendation")
-st.markdown(f"- **Speed:** {opt_row['Speed (knots)']} knots\n- **Total NPV:** ${opt_row['Total NPV (USD)']:,.0f}\n- **Total Time:** {opt_row['Total Time (days)']:.1f} days")
+if opt_path:
+    st.markdown("#### Optimal Speed Plan per Leg")
+    path_df = pd.DataFrame(opt_path, columns=["Voyage", "Leg", "Cumulative Time (days)", "Speed (knots)"])
+    st.dataframe(path_df)
 
-st.line_chart(results.set_index("Speed (knots)")["Total NPV (USD)"])
-
-st.caption("Model assumes simplified fuel and time functions. For detailed voyage modeling, integrate leg-specific data.")
+st.caption("Model implements NPV-based optimization using recursive dynamic programming across voyages and legs.")
