@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 from scipy.optimize import minimize_scalar
 
 st.set_page_config(page_title="Ronen Polynomial Dashboard – Models 1, 2, 3", layout="wide")
-st.title("🚢 Ronen Models with Cubic Polynomial Fuel Curve")
+st.title("🚢 Ronen Models with Polynomial Fuel Curve")
 
 # Sidebar Inputs
 with st.sidebar:
@@ -66,7 +66,7 @@ Z1_assumed = Z1(assumed_speed)
 Z2_assumed = Z2(assumed_speed)
 Z3_assumed = Z3(assumed_speed)
 
-# Model results display
+# Results Section
 col1, col2, col3 = st.columns(3)
 with col1:
     st.subheader("📘 Model 1: Fixed Revenue")
@@ -74,14 +74,12 @@ with col1:
     st.markdown(f"- **Daily Profit (Z):** ${Z1_opt:,.0f}")
     st.markdown(f"- **% Improvement:** {(Z1_opt - Z1_assumed) / Z1_assumed * 100:.2f}%")
     st.markdown(f"- **Savings:** ${(Z1_opt - Z1_assumed) * D(V1_opt):,.0f}")
-
 with col2:
     st.subheader("📙 Model 2: Ballast Leg")
     st.markdown(f"- **Optimum Speed:** {V2_opt:.2f} kn")
     st.markdown(f"- **Total Cost (Z):** ${Z2_opt:,.0f}")
     st.markdown(f"- **% Cost Reduction:** {(Z2_assumed - Z2_opt) / Z2_assumed * 100:.2f}%")
     st.markdown(f"- **Savings:** ${(Z2_assumed - Z2_opt):,.0f}")
-
 with col3:
     st.subheader("📗 Model 3: Bonus/Penalty")
     st.markdown(f"- **Optimum Speed:** {V3_opt:.2f} kn")
@@ -89,35 +87,27 @@ with col3:
     st.markdown(f"- **% Improvement:** {(Z3_opt - Z3_assumed) / Z3_assumed * 100:.2f}%")
     st.markdown(f"- **Savings:** ${(Z3_opt - Z3_assumed) * D(V3_opt):,.0f}")
 
-# Plot
-fig = go.Figure()
-fig.add_trace(go.Scatter(x=V_range, y=Z1_vals, name="Model 1: Daily Profit", line=dict(color="blue")))
-fig.add_trace(go.Scatter(x=V_range, y=Z2_vals, name="Model 2: Total Cost", line=dict(color="orange")))
-fig.add_trace(go.Scatter(x=V_range, y=Z3_vals, name="Model 3: Profit w/ Bonus", line=dict(color="green")))
+# Separate charts
+st.subheader("📈 Model 1: Daily Profit")
+fig1 = go.Figure()
+fig1.add_trace(go.Scatter(x=V_range, y=Z1_vals, mode="lines", name="Model 1", line=dict(color="blue")))
+fig1.add_vline(x=V1_opt, line_dash="dash", line_color="blue", annotation_text=f"Zopt: ${Z1_opt:,.0f}")
+fig1.add_vline(x=assumed_speed, line_dash="dot", line_color="gray", annotation_text=f"Zassumed: ${Z1_assumed:,.0f}")
+fig1.update_layout(xaxis_title="Speed (kn)", yaxis_title="Z ($/day)", template="plotly_white")
+st.plotly_chart(fig1, use_container_width=True)
 
-fig.add_vline(x=V1_opt, line_dash="dash", line_color="blue")
-fig.add_vline(x=V2_opt, line_dash="dash", line_color="orange")
-fig.add_vline(x=V3_opt, line_dash="dash", line_color="green")
-fig.add_vline(x=assumed_speed, line_dash="dot", line_color="gray")
+st.subheader("📈 Model 2: Total Cost")
+fig2 = go.Figure()
+fig2.add_trace(go.Scatter(x=V_range, y=Z2_vals, mode="lines", name="Model 2", line=dict(color="orange")))
+fig2.add_vline(x=V2_opt, line_dash="dash", line_color="orange", annotation_text=f"Zopt: ${Z2_opt:,.0f}")
+fig2.add_vline(x=assumed_speed, line_dash="dot", line_color="gray", annotation_text=f"Zassumed: ${Z2_assumed:,.0f}")
+fig2.update_layout(xaxis_title="Speed (kn)", yaxis_title="Z ($)", template="plotly_white")
+st.plotly_chart(fig2, use_container_width=True)
 
-fig.update_layout(title="Z vs Speed – All Models", xaxis_title="Speed (knots)", yaxis_title="Z ($/day or $)", template="plotly_white")
-st.plotly_chart(fig, use_container_width=True)
-
-# Consumption table
-st.subheader("📋 Speed vs Fuel Consumption Table")
-speeds = np.arange(10, 21)
-consumptions = [F(v) for v in speeds]
-df = pd.DataFrame({"Speed (knots)": speeds, "Fuel Consumption (tons/day)": consumptions})
-st.dataframe(df, use_container_width=True)
-
-# Info Section
-# with st.expander("ℹ️ Model Formulas"):
-#     st.markdown("### Model 1 – Income-Generating")
-#     st.latex(r"Z = rac{R - C(D_s + D_p) - F(V) \cdot F_c \cdot D_s}{D_s + D_p}")
-#     st.markdown("### Model 2 – Ballast Leg")
-#     st.latex(r"Z = \left(C_a + F(V) \cdot F_c\right) \cdot \frac{L}{24V}")\right) \cdot \frac{L}{24V}")
-
-#     st.markdown("### Model 3 – Bonus/Penalty Contracts")
-#     st.latex(r"R' = R + rac{K L}{24} \left(rac{1}{V_R} - rac{1}{V}
-# ight)")
-#     st.latex(r"Z = rac{R' - C(D_s + D_p) - F(V) \cdot F_c \cdot D_s}{D_s + D_p}")
+st.subheader("📈 Model 3: Profit with Bonus/Penalty")
+fig3 = go.Figure()
+fig3.add_trace(go.Scatter(x=V_range, y=Z3_vals, mode="lines", name="Model 3", line=dict(color="green")))
+fig3.add_vline(x=V3_opt, line_dash="dash", line_color="green", annotation_text=f"Zopt: ${Z3_opt:,.0f}")
+fig3.add_vline(x=assumed_speed, line_dash="dot", line_color="gray", annotation_text=f"Zassumed: ${Z3_assumed:,.0f}")
+fig3.update_layout(xaxis_title="Speed (kn)", yaxis_title="Z ($/day)", template="plotly_white")
+st.plotly_chart(fig3, use_container_width=True)
