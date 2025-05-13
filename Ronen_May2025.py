@@ -111,13 +111,13 @@ df = pd.DataFrame({"Speed (knots)": speeds, "Fuel Consumption (tons/day)": consu
 st.dataframe(df, use_container_width=True)
 
 # Info Section
-with st.expander("ℹ️ Model Formulas"):
-    st.markdown("### Model 1 – Income-Generating")
-    st.latex(r"Z = rac{R - C(D_s + D_p) - F(V) \cdot F_c \cdot D_s}{D_s + D_p}")
-    st.markdown("### Model 2 – Ballast Leg")
-    st.latex(r"Z = \left(C_a + F(V) \cdot F_c\right) \cdot \frac{L}{24V}")\right) \cdot \frac{L}{24V}")
+# with st.expander("ℹ️ Model Formulas"):
+#     st.markdown("### Model 1 – Income-Generating")
+#     st.latex(r"Z = rac{R - C(D_s + D_p) - F(V) \cdot F_c \cdot D_s}{D_s + D_p}")
+#     st.markdown("### Model 2 – Ballast Leg")
+#     st.latex(r"Z = \left(C_a + F(V) \cdot F_c\right) \cdot \frac{L}{24V}")\right) \cdot \frac{L}{24V}")
 
-    st.markdown("### Model 3 – Bonus/Penalty Contracts")
-    st.latex(r"R' = R + rac{K L}{24} \left(rac{1}{V_R} - rac{1}{V}
-ight)")
-    st.latex(r"Z = rac{R' - C(D_s + D_p) - F(V) \cdot F_c \cdot D_s}{D_s + D_p}")
+#     st.markdown("### Model 3 – Bonus/Penalty Contracts")
+#     st.latex(r"R' = R + rac{K L}{24} \left(rac{1}{V_R} - rac{1}{V}
+# ight)")
+#     st.latex(r"Z = rac{R' - C(D_s + D_p) - F(V) \cdot F_c \cdot D_s}{D_s + D_p}")
