@@ -122,7 +122,7 @@ with st.expander("ℹ️ Model Equations & Explanation"):
     st.markdown("Maximizes daily profit from cargo revenue.")
 
     st.markdown("**Model 2:** Ballast Leg Cost Minimization")
-    st.latex(r"Z_2 = \left(C_a + F(V) \cdot F_c
+    st.latex(r"Z_2 = \left(C_a + F(V) \cdot F_c\right) \cdot \frac{L}{24V}")
 ight) \cdot rac{L}{24V}")
     st.markdown("Minimizes cost of empty voyage using daily opportunity and fuel cost.")
 
